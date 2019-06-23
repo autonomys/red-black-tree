@@ -76,7 +76,7 @@ export class Tree<V = any> {
                         } else {
                             currentNode.left = nodeToInsert;
                             path.push(nodeToInsert);
-                            this.fixTree(path, true);
+                            this.fixTree(path);
                             break depth;
                         }
                     case 1:
@@ -86,7 +86,7 @@ export class Tree<V = any> {
                         } else {
                             currentNode.right = nodeToInsert;
                             path.push(nodeToInsert);
-                            this.fixTree(path, false);
+                            this.fixTree(path);
                             break depth;
                         }
                     default:
@@ -97,7 +97,7 @@ export class Tree<V = any> {
         }
     }
 
-    private fixTree(path: Array<Node<V>>, isLeft: boolean): void {
+    private fixTree(path: Array<Node<V>>): void {
         const targetNode = path.pop();
         if (!targetNode) {
             throw new RuntimeExceptionError("Can't fix path without target node, this should never happen");
@@ -107,12 +107,19 @@ export class Tree<V = any> {
             return;
         }
         const grandParent = path.pop();
-        const uncle = grandParent && (isLeft ? grandParent.left : grandParent.right);
+        if (!grandParent) {
+            return;
+        }
+        const uncle = parent.left === targetNode ? grandParent.left : grandParent.right;
         if (!uncle) {
             return;
         }
         if (uncle.isRed) {
-            // TODO:
+            parent.isRed = !parent.isRed;
+            grandParent.isRed = !grandParent.isRed;
+            uncle.isRed = !uncle.isRed;
+            path.push(uncle);
+            this.fixTree(path);
         } else {
             // TODO:
         }
