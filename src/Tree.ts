@@ -20,6 +20,11 @@ function compare(a: Uint8Array, b: Uint8Array): number {
     return 0;
 }
 
+/**
+ * Resources used to write this:
+ * * https://www.youtube.com/playlist?list=PL9xmBV_5YoZNqDI8qfOZgzbqahCUmUEin
+ * * https://www.youtube.com/watch?v=YCo2-H2CL6Q
+ */
 export class Tree<V = any> {
     private root: Node<V> | null = null;
 
