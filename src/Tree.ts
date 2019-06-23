@@ -1,35 +1,53 @@
 class RuntimeExceptionError extends Error {
 }
 
+/**
+ * @param a
+ * @param b
+ *
+ * @return `-1` if `a` is smaller than `b`, `1` is `a` is bigger than `b` and `0` if they are equal
+ */
+function compare(a: Uint8Array, b: Uint8Array): number {
+    const length = a.length;
+    for (let i = 0; i < length; ++i) {
+        const diff = a[i] - b[i];
+        if (diff < 0) {
+            return -1;
+        } else if (diff > 0) {
+            return 1;
+        }
+    }
+    return 0;
+}
+
 class Node<V> {
+    /**
+     * Node is red by default, but may turn black or red again as needed
+     */
+    public isRed: boolean = true;
     /**
      * Left children
      */
-    public left: Node<V> | null;
+    public left: Node<V> | null = null;
     /**
      * Right children
      */
-    public right: Node<V> | null;
+    public right: Node<V> | null = null;
 
     constructor(
         public readonly key: Uint8Array,
         public readonly value: V,
-        public isRed: boolean,
     ) {
-        this.left = null;
-        this.right = null;
     }
 }
 
 export class Tree<V = any> {
-    private root: Uint8Array | null = null;
+    private root: Node<V> | null = null;
 
     /**
      * Instantiate a new tree with desired properties
-     *
-     * @param keyLength Length of the key being indexed, default is 32 bytes
      */
-    constructor(keyLength: number = 32) {
+    constructor() {
         this.root = null;
     }
 
@@ -40,8 +58,45 @@ export class Tree<V = any> {
      * @param value Value to be associated with a key
      */
     public addNode(key: Uint8Array, value: V): void {
-        const node = new Node(key, value, true);
-        // TODO: Insertion
+        const nodeToInsert = new Node(key, value);
+
+        if (!this.root) {
+            nodeToInsert.isRed = false;
+            this.root = nodeToInsert;
+        } else {
+            let currentNode = this.root;
+            let parent: Node<V> | null = null;
+            let grandParent: Node<V> | null;
+            depth: while (true) {
+                grandParent = parent;
+                parent = currentNode;
+                switch (compare(nodeToInsert.key, currentNode.key)) {
+                    case -1:
+                        if (currentNode.left) {
+                            currentNode = currentNode.left;
+                            break;
+                        } else {
+                            // TODO: This branch
+                            const uncle = grandParent && grandParent.left;
+                            this.fixTree();
+                            break depth;
+                        }
+                    case 1:
+                        if (currentNode.right) {
+                            currentNode = currentNode.right;
+                            break;
+                        } else {
+                            // TODO: This branch
+                            const uncle = grandParent && grandParent.right;
+                            this.fixTree();
+                            break depth;
+                        }
+                    default:
+                        // We do not insert the same key again
+                        return;
+                }
+            }
+        }
     }
 
     private rotateLeft(rotationNode: Node<V>): Node<V> {
