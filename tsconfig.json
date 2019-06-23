@@ -1,0 +1,25 @@
+{
+  "compilerOptions": {
+
+    "module": "umd",
+    "target": "esnext",
+    "sourceMap": true,
+    "forceConsistentCasingInFileNames": true,
+    "noImplicitReturns": true,
+    "moduleResolution": "node",
+    "allowSyntheticDefaultImports": false,
+    "declaration": true,
+    "sourceRoot": "src",
+    "baseUrl": "src",
+    "outDir": "dist",
+    "strict": true,
+    "noUnusedParameters": true,
+    "noUnusedLocals": true,
+    "lib": [
+      "es2015"
+    ]
+  },
+  "include": [
+    "src"
+  ]
+}
