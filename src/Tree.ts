@@ -83,6 +83,7 @@ export class Tree<V = any> {
             const parent = path.pop();
             // `targetNode` is root, nothing left to do
             if (!parent) {
+                targetNode.isRed = false;
                 return;
             }
             // No conflict, nothing left to do
@@ -103,39 +104,40 @@ export class Tree<V = any> {
                 path.push(grandParent);
                 continue;
             }
+
             // Triangle cases
             if (
                 parent.left === targetNode &&
                 grandParent.right === parent
             ) {
                 grandParent.right = this.rotateRight(parent);
-                parent.isRed = !parent.isRed;
-                grandParent.isRed = false;
+                path.push(grandParent, targetNode, parent);
+                continue;
             } else if (
                 parent.right === targetNode &&
                 grandParent.left === parent
             ) {
                 grandParent.left = this.rotateLeft(parent);
-                parent.isRed = !parent.isRed;
-                grandParent.isRed = false;
-            } else {
-                // Line cases
-                const subRoot = parent.left === targetNode
-                    ? this.rotateRight(grandParent)
-                    : this.rotateLeft(grandParent);
-                const grandGrandParent = path.pop();
-                if (grandGrandParent) {
-                    if (grandGrandParent.left === grandParent) {
-                        grandGrandParent.left = subRoot;
-                    } else {
-                        grandGrandParent.right = subRoot;
-                    }
-                } else {
-                    this.root = subRoot;
-                }
-                parent.isRed = !parent.isRed;
-                grandParent.isRed = !grandParent.isRed;
+                path.push(grandParent, targetNode, parent);
+                continue;
             }
+
+            // Line cases
+            const subRoot = parent.left === targetNode
+                ? this.rotateRight(grandParent)
+                : this.rotateLeft(grandParent);
+            const grandGrandParent = path.pop();
+            if (grandGrandParent) {
+                if (grandGrandParent.left === grandParent) {
+                    grandGrandParent.left = subRoot;
+                } else {
+                    grandGrandParent.right = subRoot;
+                }
+            } else {
+                this.root = subRoot;
+            }
+            parent.isRed = !parent.isRed;
+            grandParent.isRed = !grandParent.isRed;
             break;
         }
     }

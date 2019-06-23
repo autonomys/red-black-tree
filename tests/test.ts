@@ -12,27 +12,22 @@ interface ITreeWithRoot {
 
 // @ts-ignore
 function validateRulesFollowed(tree: ITreeWithRoot<null>): boolean {
-    // let blackHeight = 1;
-    // let currentNode = tree.root;
-    // while (currentNode.left) {
-    //     if (!currentNode.isRed) {
-    //         ++blackHeight;
-    //     }
-    //     currentNode = currentNode.left;
-    // }
-    return checkLevel(tree.root);
+    return (
+        checkOrder(tree.root) &&
+        checkHeight(tree.root)
+    );
 }
 
-function checkLevel(node: Node<null>): boolean {
+function checkOrder(node: Node<null>): boolean {
     if (!node.isRed) {
         return (
             (
                 !node.left ||
-                checkLevel(node.left)
+                checkOrder(node.left)
             ) &&
             (
                 !node.right ||
-                checkLevel(node.right)
+                checkOrder(node.right)
             )
         );
     }
@@ -41,17 +36,34 @@ function checkLevel(node: Node<null>): boolean {
             !node.left ||
             (
                 !node.left.isRed &&
-                checkLevel(node.left)
+                checkOrder(node.left)
             )
         ) &&
         (
             !node.right ||
             (
                 !node.right.isRed &&
-                checkLevel(node.right)
+                checkOrder(node.right)
             )
         )
     );
+}
+
+function checkHeight(node: Node<null>): boolean {
+    return getHeight(node) !== false;
+}
+
+function getHeight(node: Node<null> | null): number | false {
+    if (!node) {
+        return 1;
+    }
+    const leftHeight = getHeight(node.left);
+    const rightHeight = getHeight(node.right);
+    if (leftHeight !== rightHeight || leftHeight === false) {
+        console.log(leftHeight, rightHeight);
+        return false;
+    }
+    return (node.isRed ? 0 : 1) + leftHeight;
 }
 
 test('Basic test', (t) => {
@@ -61,17 +73,16 @@ test('Basic test', (t) => {
     }
     shuffle(keys);
     // const keys: Uint8Array[] = [
-    //     Uint8Array.of(5),
-    //     Uint8Array.of(6),
-    //     Uint8Array.of(1),
-    //     Uint8Array.of(8),
+    //     Uint8Array.of(0),
+    //     Uint8Array.of(7),
+    //     Uint8Array.of(9),
     //     Uint8Array.of(4),
-    //     Uint8Array.of(2),
+    //     Uint8Array.of(3),
     // ];
 
     const tree = new Tree() as ITreeWithRoot & Tree;
     for (const key of keys) {
-        if (key[0] === 2) {
+        if (key[0] === 3) {
             debugger;
         }
         tree.addNode(key, null);
