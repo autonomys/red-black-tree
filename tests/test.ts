@@ -60,7 +60,6 @@ function getHeight(node: Node<null> | null): number | false {
     const leftHeight = getHeight(node.left);
     const rightHeight = getHeight(node.right);
     if (leftHeight !== rightHeight || leftHeight === false) {
-        console.log(leftHeight, rightHeight);
         return false;
     }
     return (node.isRed ? 0 : 1) + leftHeight;
@@ -73,10 +72,16 @@ test('Basic test', (t) => {
     }
     shuffle(keys);
 
-    const tree = new Tree() as ITreeWithRoot & Tree;
-    for (const key of keys) {
-        tree.addNode(key, null);
-        t.ok(validateRulesFollowed(tree), `Inserting key ${key[0]}`);
+    for (let i = 1; i <= 10; ++i) {
+        t.test(`Round ${i}`, (t) => {
+            const tree = new Tree() as ITreeWithRoot & Tree;
+            for (const key of keys) {
+                tree.addNode(key, null);
+                t.ok(validateRulesFollowed(tree), `Inserting key ${key[0]}`);
+            }
+
+            t.end();
+        });
     }
 
     t.end();

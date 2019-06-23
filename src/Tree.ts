@@ -83,7 +83,6 @@ export class Tree<V = any> {
             const parent = path.pop();
             // `targetNode` is root, nothing left to do
             if (!parent) {
-                targetNode.isRed = false;
                 return;
             }
             // No conflict, nothing left to do
