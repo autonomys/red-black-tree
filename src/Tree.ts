@@ -74,6 +74,56 @@ export class Tree<V = any> {
         }
     }
 
+    // /**
+    //  * Add nodes to tree as a batch, should pre-sort and add in desired order for efficiency
+    //  *
+    //  * @param keySet A set unique keys to be indexed in the tree
+    //  */
+    // public addNodeSet(keySet: Uint8Array[]) {
+    // }
+
+    // /**
+    //  * Remove a node from the tree
+    //  *
+    //  * @param key A key to be removed, e.g. a 32 byte piece id
+    //  */
+    // public removeNode(key: Uint8Array): void {
+    // }
+
+    /**
+     * Get the closest node/key in a tree to a given target in the same key space
+     *
+     * @param target The target for evaluation, e.g. a challenge in the same key space
+     *
+     * @return The closest key to the challenge or `null` if no nodes are available
+     */
+    public getClosestNode(target: Uint8Array): Uint8Array | null {
+        let currentNode = this.root;
+        if (!currentNode) {
+            return null;
+        }
+        while (true) {
+            switch (compare(target, currentNode.key)) {
+                case -1:
+                    if (currentNode.left) {
+                        currentNode = currentNode.left;
+                        break;
+                    } else {
+                        return currentNode.key;
+                    }
+                case 1:
+                    if (currentNode.right) {
+                        currentNode = currentNode.right;
+                        break;
+                    } else {
+                        return currentNode.key;
+                    }
+                default:
+                    return currentNode.key;
+            }
+        }
+    }
+
     private fixTree(path: Array<Node<V>>): void {
         while (path.length) {
             const targetNode = path.pop();
@@ -164,32 +214,6 @@ export class Tree<V = any> {
         return originalLeftNode;
     }
 
-    // /**
-    //  * Add nodes to tree as a batch, should pre-sort and add in desired order for efficiency
-    //  *
-    //  * @param keySet A set unique keys to be indexed in the tree
-    //  */
-    // public addNodeSet(keySet: Uint8Array[]) {
-    // }
-
-    // /**
-    //  * Remove a node from the tree
-    //  *
-    //  * @param key A key to be removed, e.g. a 32 byte piece id
-    //  */
-    // public removeNode(key: Uint8Array): void {
-    // }
-    //
-    // /**
-    //  * Get the closest node/key in a tree to a given target in the same keyspace
-    //  *
-    //  * @param target The target for evaluation, e.g. a challenge in the same key space
-    //  *
-    //  * @return The closest key to the challenge
-    //  */
-    // public getClosestNode(target: Uint8Array): Uint8Array {
-    // }
-    //
     // /**
     //  * Save the current in-memory Tree to disk
     //  *
