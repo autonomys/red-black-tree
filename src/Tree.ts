@@ -76,9 +76,8 @@ export class Tree<V = any> {
                             currentNode = currentNode.left;
                             break;
                         } else {
-                            // TODO: This branch
-                            const uncle = grandParent && grandParent.left;
-                            this.fixTree();
+                            currentNode.left = nodeToInsert;
+                            this.fixTree(grandParent, parent, nodeToInsert, true);
                             break depth;
                         }
                     case 1:
@@ -86,9 +85,8 @@ export class Tree<V = any> {
                             currentNode = currentNode.right;
                             break;
                         } else {
-                            // TODO: This branch
-                            const uncle = grandParent && grandParent.right;
-                            this.fixTree();
+                            currentNode.right = nodeToInsert;
+                            this.fixTree(grandParent, parent, nodeToInsert, false);
                             break depth;
                         }
                     default:
@@ -96,6 +94,18 @@ export class Tree<V = any> {
                         return;
                 }
             }
+        }
+    }
+
+    private fixTree(grandParent: Node<V> | null, parent: Node<V>, nodeToInsert: Node<V>, isLeft: boolean): void {
+        const uncle = grandParent && (isLeft ? grandParent.left : grandParent.right);
+        if (!uncle) {
+            return;
+        }
+        if (uncle.isRed) {
+            // TODO:
+        } else {
+            // TODO:
         }
     }
 
