@@ -1,5 +1,5 @@
-class RuntimeExceptionError extends Error {
-}
+import {Node} from "./Node";
+import {RuntimeError} from "./RuntimeError";
 
 /**
  * @param a
@@ -20,36 +20,8 @@ function compare(a: Uint8Array, b: Uint8Array): number {
     return 0;
 }
 
-class Node<V> {
-    /**
-     * Node is red by default, but may turn black or red again as needed
-     */
-    public isRed: boolean = true;
-    /**
-     * Left children
-     */
-    public left: Node<V> | null = null;
-    /**
-     * Right children
-     */
-    public right: Node<V> | null = null;
-
-    constructor(
-        public readonly key: Uint8Array,
-        public readonly value: V,
-    ) {
-    }
-}
-
 export class Tree<V = any> {
     private root: Node<V> | null = null;
-
-    /**
-     * Instantiate a new tree with desired properties
-     */
-    constructor() {
-        this.root = null;
-    }
 
     /**
      * Add nodes to a tree one by one (for incremental updates)
@@ -98,41 +70,74 @@ export class Tree<V = any> {
     }
 
     private fixTree(path: Array<Node<V>>): void {
-        const targetNode = path.pop();
-        if (!targetNode) {
-            throw new RuntimeExceptionError("Can't fix path without target node, this should never happen");
-        }
-        const parent = path.pop();
-        if (!parent) {
-            return;
-        }
-        const grandParent = path.pop();
-        if (!grandParent) {
-            return;
-        }
-        const uncle = parent.left === targetNode ? grandParent.left : grandParent.right;
-        if (!uncle) {
-            return;
-        }
-        if (uncle.isRed) {
-            parent.isRed = !parent.isRed;
-            grandParent.isRed = !grandParent.isRed;
-            uncle.isRed = !uncle.isRed;
-            path.push(uncle);
-            this.fixTree(path);
-        } else {
-            // TODO:
+        while (path.length) {
+            const targetNode = path.pop();
+            if (!targetNode) {
+                throw new RuntimeError("Can't fix path without target node, this should never happen");
+            }
+            const parent = path.pop();
+            // `targetNode` is root, nothing left to do
+            if (!parent) {
+                targetNode.isRed = false;
+                return;
+            }
+            // No conflict, nothing left to do
+            if (!parent.isRed) {
+                return;
+            }
+            const grandParent = path.pop();
+            if (!grandParent) {
+                parent.isRed = false;
+                return;
+            }
+            const uncle = parent.left === targetNode ? grandParent.left : grandParent.right;
+            // Here we handle `null` as black `nil` node implicitly, since we do not create `nil` nodes as such
+            if (uncle && uncle.isRed) {
+                parent.isRed = !parent.isRed;
+                grandParent.isRed = !grandParent.isRed;
+                uncle.isRed = !uncle.isRed;
+                path.push(grandParent);
+                this.fixTree(path);
+            } else {
+                // Triangle cases
+                if (
+                    parent.left === targetNode &&
+                    grandParent.right === parent
+                ) {
+                    this.rotateRight(parent);
+                    // `targetNode` and `parent` just swapped their places
+                    path.push(grandParent, targetNode, parent);
+                    this.fixTree(path);
+                    return;
+                } else if (
+                    parent.right === targetNode &&
+                    grandParent.left === parent
+                ) {
+                    this.rotateLeft(parent);
+                    // `targetNode` and `parent` just swapped their places
+                    path.push(grandParent, targetNode, parent);
+                    this.fixTree(path);
+                    return;
+                }
+                // Line cases
+                if (parent.left === targetNode) {
+                    this.rotateRight(grandParent);
+                } else {
+                    this.rotateLeft(grandParent);
+                }
+                parent.isRed = !parent.isRed;
+                grandParent.isRed = !grandParent.isRed;
+            }
         }
     }
 
     private rotateLeft(rotationNode: Node<V>): Node<V> {
         const originalRightNode = rotationNode.right;
         if (!originalRightNode) {
-            throw new RuntimeExceptionError('Right children of rotation node is null, this should never happen');
+            throw new RuntimeError('Right children of rotation node is null, this should never happen');
         }
         rotationNode.right = originalRightNode.left;
         originalRightNode.left = rotationNode;
-        // TODO: Colors?
 
         return originalRightNode;
     }
@@ -140,7 +145,7 @@ export class Tree<V = any> {
     private rotateRight(rotationNode: Node<V>): Node<V> {
         const originalLeftNode = rotationNode.left;
         if (!originalLeftNode) {
-            throw new RuntimeExceptionError('Left children of rotation node is null, this should never happen');
+            throw new RuntimeError('Left children of rotation node is null, this should never happen');
         }
         rotationNode.left = originalLeftNode.right;
         originalLeftNode.right = rotationNode;
@@ -157,24 +162,24 @@ export class Tree<V = any> {
     // public addNodeSet(keySet: Uint8Array[]) {
     // }
 
-    /**
-     * Remove a node from the tree
-     *
-     * @param key A key to be removed, e.g. a 32 byte piece id
-     */
-    public removeNode(key: Uint8Array): void {
-    }
-
-    /**
-     * Get the closest node/key in a tree to a given target in the same keyspace
-     *
-     * @param target The target for evaluation, e.g. a challenge in the same key space
-     *
-     * @return The closest key to the challenge
-     */
-    public getClosestNode(target: Uint8Array): Uint8Array {
-    }
-
+    // /**
+    //  * Remove a node from the tree
+    //  *
+    //  * @param key A key to be removed, e.g. a 32 byte piece id
+    //  */
+    // public removeNode(key: Uint8Array): void {
+    // }
+    //
+    // /**
+    //  * Get the closest node/key in a tree to a given target in the same keyspace
+    //  *
+    //  * @param target The target for evaluation, e.g. a challenge in the same key space
+    //  *
+    //  * @return The closest key to the challenge
+    //  */
+    // public getClosestNode(target: Uint8Array): Uint8Array {
+    // }
+    //
     // /**
     //  * Save the current in-memory Tree to disk
     //  *
