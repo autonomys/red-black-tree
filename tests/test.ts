@@ -72,19 +72,9 @@ test('Basic test', (t) => {
         keys.push(Uint8Array.of(i));
     }
     shuffle(keys);
-    // const keys: Uint8Array[] = [
-    //     Uint8Array.of(0),
-    //     Uint8Array.of(7),
-    //     Uint8Array.of(9),
-    //     Uint8Array.of(4),
-    //     Uint8Array.of(3),
-    // ];
 
     const tree = new Tree() as ITreeWithRoot & Tree;
     for (const key of keys) {
-        if (key[0] === 3) {
-            debugger;
-        }
         tree.addNode(key, null);
         t.ok(validateRulesFollowed(tree), `Inserting key ${key[0]}`);
     }
