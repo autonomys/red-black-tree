@@ -65,11 +65,9 @@ export class Tree<V = any> {
             this.root = nodeToInsert;
         } else {
             let currentNode = this.root;
-            let parent: Node<V> | null = null;
-            let grandParent: Node<V> | null;
+            const path: Array<Node<V>> = [];
             depth: while (true) {
-                grandParent = parent;
-                parent = currentNode;
+                path.push(currentNode);
                 switch (compare(nodeToInsert.key, currentNode.key)) {
                     case -1:
                         if (currentNode.left) {
@@ -77,7 +75,8 @@ export class Tree<V = any> {
                             break;
                         } else {
                             currentNode.left = nodeToInsert;
-                            this.fixTree(grandParent, parent, nodeToInsert, true);
+                            path.push(nodeToInsert);
+                            this.fixTree(path, true);
                             break depth;
                         }
                     case 1:
@@ -86,7 +85,8 @@ export class Tree<V = any> {
                             break;
                         } else {
                             currentNode.right = nodeToInsert;
-                            this.fixTree(grandParent, parent, nodeToInsert, false);
+                            path.push(nodeToInsert);
+                            this.fixTree(path, false);
                             break depth;
                         }
                     default:
@@ -97,7 +97,16 @@ export class Tree<V = any> {
         }
     }
 
-    private fixTree(grandParent: Node<V> | null, parent: Node<V>, nodeToInsert: Node<V>, isLeft: boolean): void {
+    private fixTree(path: Array<Node<V>>, isLeft: boolean): void {
+        const targetNode = path.pop();
+        if (!targetNode) {
+            throw new RuntimeExceptionError("Can't fix path without target node, this should never happen");
+        }
+        const parent = path.pop();
+        if (!parent) {
+            return;
+        }
+        const grandParent = path.pop();
         const uncle = grandParent && (isLeft ? grandParent.left : grandParent.right);
         if (!uncle) {
             return;
