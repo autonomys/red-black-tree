@@ -83,7 +83,6 @@ export class Tree<V = any> {
             const parent = path.pop();
             // `targetNode` is root, nothing left to do
             if (!parent) {
-                targetNode.isRed = false;
                 return;
             }
             // No conflict, nothing left to do
@@ -95,44 +94,49 @@ export class Tree<V = any> {
                 parent.isRed = false;
                 return;
             }
-            const uncle = parent.left === targetNode ? grandParent.left : grandParent.right;
+            const uncle = grandParent.left === parent ? grandParent.right : grandParent.left;
             // Here we handle `null` as black `nil` node implicitly, since we do not create `nil` nodes as such
             if (uncle && uncle.isRed) {
                 parent.isRed = !parent.isRed;
                 grandParent.isRed = !grandParent.isRed;
-                uncle.isRed = !uncle.isRed;
+                uncle.isRed = false;
                 path.push(grandParent);
-                this.fixTree(path);
+                continue;
+            }
+            // Triangle cases
+            if (
+                parent.left === targetNode &&
+                grandParent.right === parent
+            ) {
+                grandParent.right = this.rotateRight(parent);
+                parent.isRed = !parent.isRed;
+                grandParent.isRed = false;
+            } else if (
+                parent.right === targetNode &&
+                grandParent.left === parent
+            ) {
+                grandParent.left = this.rotateLeft(parent);
+                parent.isRed = !parent.isRed;
+                grandParent.isRed = false;
             } else {
-                // Triangle cases
-                if (
-                    parent.left === targetNode &&
-                    grandParent.right === parent
-                ) {
-                    this.rotateRight(parent);
-                    // `targetNode` and `parent` just swapped their places
-                    path.push(grandParent, targetNode, parent);
-                    this.fixTree(path);
-                    return;
-                } else if (
-                    parent.right === targetNode &&
-                    grandParent.left === parent
-                ) {
-                    this.rotateLeft(parent);
-                    // `targetNode` and `parent` just swapped their places
-                    path.push(grandParent, targetNode, parent);
-                    this.fixTree(path);
-                    return;
-                }
                 // Line cases
-                if (parent.left === targetNode) {
-                    this.rotateRight(grandParent);
+                const subRoot = parent.left === targetNode
+                    ? this.rotateRight(grandParent)
+                    : this.rotateLeft(grandParent);
+                const grandGrandParent = path.pop();
+                if (grandGrandParent) {
+                    if (grandGrandParent.left === grandParent) {
+                        grandGrandParent.left = subRoot;
+                    } else {
+                        grandGrandParent.right = subRoot;
+                    }
                 } else {
-                    this.rotateLeft(grandParent);
+                    this.root = subRoot;
                 }
                 parent.isRed = !parent.isRed;
                 grandParent.isRed = !grandParent.isRed;
             }
+            break;
         }
     }
 

@@ -6,11 +6,52 @@ import {Tree} from "../src/Tree";
 /**
  * Here we hack `root` property, which is an implementation detail, but needed for tests to run
  */
-type ITreeWithRoot<V> = { root: Node<Uint8Array> | null } & Tree<V>;
+interface ITreeWithRoot {
+    root: Node<Uint8Array> | null;
+}
 
 // @ts-ignore
 function validateRulesFollowed(tree: ITreeWithRoot<null>): boolean {
-    return true;
+    // let blackHeight = 1;
+    // let currentNode = tree.root;
+    // while (currentNode.left) {
+    //     if (!currentNode.isRed) {
+    //         ++blackHeight;
+    //     }
+    //     currentNode = currentNode.left;
+    // }
+    return checkLevel(tree.root);
+}
+
+function checkLevel(node: Node<null>): boolean {
+    if (!node.isRed) {
+        return (
+            (
+                !node.left ||
+                checkLevel(node.left)
+            ) &&
+            (
+                !node.right ||
+                checkLevel(node.right)
+            )
+        );
+    }
+    return (
+        (
+            !node.left ||
+            (
+                !node.left.isRed &&
+                checkLevel(node.left)
+            )
+        ) &&
+        (
+            !node.right ||
+            (
+                !node.right.isRed &&
+                checkLevel(node.right)
+            )
+        )
+    );
 }
 
 test('Basic test', (t) => {
@@ -19,9 +60,20 @@ test('Basic test', (t) => {
         keys.push(Uint8Array.of(i));
     }
     shuffle(keys);
+    // const keys: Uint8Array[] = [
+    //     Uint8Array.of(5),
+    //     Uint8Array.of(6),
+    //     Uint8Array.of(1),
+    //     Uint8Array.of(8),
+    //     Uint8Array.of(4),
+    //     Uint8Array.of(2),
+    // ];
 
-    const tree = new Tree() as ITreeWithRoot<null>;
+    const tree = new Tree() as ITreeWithRoot & Tree;
     for (const key of keys) {
+        if (key[0] === 2) {
+            debugger;
+        }
         tree.addNode(key, null);
         t.ok(validateRulesFollowed(tree), `Inserting key ${key[0]}`);
     }
