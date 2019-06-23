@@ -1,19 +1,19 @@
 class RuntimeExceptionError extends Error {
 }
 
-class Node {
+class Node<V> {
     /**
      * Left children
      */
-    public left: Node | null;
+    public left: Node<V> | null;
     /**
      * Right children
      */
-    public right: Node | null;
+    public right: Node<V> | null;
 
     constructor(
         public readonly key: Uint8Array,
-        public readonly value: number,
+        public readonly value: V,
         public isRed: boolean,
     ) {
         this.left = null;
@@ -21,7 +21,7 @@ class Node {
     }
 }
 
-export class Tree {
+export class Tree<V = any> {
     private root: Uint8Array | null = null;
 
     /**
@@ -37,11 +37,14 @@ export class Tree {
      * Add nodes to a tree one by one (for incremental updates)
      *
      * @param key  A key to be indexed, e.g. a 32 byte piece id
+     * @param value Value to be associated with a key
      */
-    public addNode(key: Uint8Array): void {
+    public addNode(key: Uint8Array, value: V): void {
+        const node = new Node(key, value, true);
+        // TODO: Insertion
     }
 
-    private rotateLeft(rotationNode: Node): void {
+    private rotateLeft(rotationNode: Node<V>): Node<V> {
         const originalRightNode = rotationNode.right;
         if (!originalRightNode) {
             throw new RuntimeExceptionError('Right children of rotation node is null, this should never happen');
@@ -49,9 +52,11 @@ export class Tree {
         rotationNode.right = originalRightNode.left;
         originalRightNode.left = rotationNode;
         // TODO: Colors?
+
+        return originalRightNode;
     }
 
-    private rotateRight(rotationNode: Node): void {
+    private rotateRight(rotationNode: Node<V>): Node<V> {
         const originalLeftNode = rotationNode.left;
         if (!originalLeftNode) {
             throw new RuntimeExceptionError('Left children of rotation node is null, this should never happen');
@@ -59,6 +64,8 @@ export class Tree {
         rotationNode.left = originalLeftNode.right;
         originalLeftNode.right = rotationNode;
         // TODO: Colors?
+
+        return originalLeftNode;
     }
 
     // /**
