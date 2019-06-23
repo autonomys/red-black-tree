@@ -7,11 +7,10 @@ import {Tree} from "../src/Tree";
  * Here we hack `root` property, which is an implementation detail, but needed for tests to run
  */
 interface ITreeWithRoot {
-    root: Node<Uint8Array> | null;
+    root: Node<null>;
 }
 
-// @ts-ignore
-function validateRulesFollowed(tree: ITreeWithRoot<null>): boolean {
+function validateRulesFollowed(tree: ITreeWithRoot): boolean {
     return (
         checkOrder(tree.root) &&
         checkHeight(tree.root)

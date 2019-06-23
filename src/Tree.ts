@@ -209,7 +209,6 @@ export class Tree<V = any> {
         }
         rotationNode.left = originalLeftNode.right;
         originalLeftNode.right = rotationNode;
-        // TODO: Colors?
 
         return originalLeftNode;
     }
