@@ -12,6 +12,7 @@ interface ITreeWithRoot {
 
 function validateRulesFollowed(tree: ITreeWithRoot): boolean {
     return (
+        !tree.root.isRed &&
         checkOrder(tree.root) &&
         checkHeight(tree.root)
     );

@@ -148,7 +148,7 @@ export class Tree<V = any> {
             // Here we handle `null` as black `nil` node implicitly, since we do not create `nil` nodes as such
             if (uncle && uncle.isRed) {
                 parent.isRed = !parent.isRed;
-                grandParent.isRed = !grandParent.isRed;
+                grandParent.isRed = grandParent === this.root ? false : !grandParent.isRed;
                 uncle.isRed = false;
                 path.push(grandParent);
                 continue;
