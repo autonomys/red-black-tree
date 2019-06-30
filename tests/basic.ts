@@ -11,6 +11,9 @@ interface ITreeWithRoot {
 }
 
 function validateRulesFollowed(tree: ITreeWithRoot): boolean {
+    if (tree.root === null) {
+        return true;
+    }
     return (
         !tree.root.isRed &&
         checkOrder(tree.root) &&
@@ -71,13 +74,32 @@ test('Basic test', (t) => {
         keys.push(Uint8Array.of(i));
     }
     shuffle(keys);
+    // keys.length = 0;
+    // keys.push(Uint8Array.of(4));
+    // keys.push(Uint8Array.of(1));
+    // keys.push(Uint8Array.of(6));
+    // keys.push(Uint8Array.of(9));
 
     for (let i = 1; i <= 10; ++i) {
+    // for (let i = 1; i <= 1; ++i) {
         t.test(`Round ${i}`, (t) => {
             const tree = new Tree() as ITreeWithRoot & Tree;
             for (const key of keys) {
                 tree.addNode(key, null);
                 t.ok(validateRulesFollowed(tree), `Inserting key ${key[0]}`);
+            }
+
+            shuffle(keys);
+            // keys.length = 0;
+            // keys.push(Uint8Array.of(9));
+            // keys.push(Uint8Array.of(4));
+
+            for (const key of keys) {
+                // if (key[0] === 4) {
+                //     debugger;
+                // }
+                tree.removeNode(key);
+                t.ok(validateRulesFollowed(tree), `Deleting key ${key[0]}`);
             }
 
             t.end();
