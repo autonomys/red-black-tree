@@ -159,31 +159,24 @@ export class Tree<V = any> {
                 parent.left === targetNode &&
                 grandParent.right === parent
             ) {
-                grandParent.right = this.rotateRight(parent);
+                this.rotateRight(parent, grandParent);
                 path.push(grandParent, targetNode, parent);
                 continue;
             } else if (
                 parent.right === targetNode &&
                 grandParent.left === parent
             ) {
-                grandParent.left = this.rotateLeft(parent);
+                this.rotateLeft(parent, grandParent);
                 path.push(grandParent, targetNode, parent);
                 continue;
             }
 
+            const grandGrandParent = path.pop() || null;
             // Line cases
-            const subRoot = parent.left === targetNode
-                ? this.rotateRight(grandParent)
-                : this.rotateLeft(grandParent);
-            const grandGrandParent = path.pop();
-            if (grandGrandParent) {
-                if (grandGrandParent.left === grandParent) {
-                    grandGrandParent.left = subRoot;
-                } else {
-                    grandGrandParent.right = subRoot;
-                }
+            if (parent.left === targetNode) {
+                this.rotateRight(grandParent, grandGrandParent);
             } else {
-                this.root = subRoot;
+                this.rotateLeft(grandParent, grandGrandParent);
             }
             parent.isRed = !parent.isRed;
             grandParent.isRed = !grandParent.isRed;
@@ -191,7 +184,11 @@ export class Tree<V = any> {
         }
     }
 
-    private rotateLeft(rotationNode: Node<V>): Node<V> {
+    /**
+     * @param rotationNode
+     * @param parent       `null` if `rotationNode` is root
+     */
+    private rotateLeft(rotationNode: Node<V>, parent: Node<V> | null): void {
         const originalRightNode = rotationNode.right;
         if (!originalRightNode) {
             throw new RuntimeError('Right children of rotation node is null, this should never happen');
@@ -199,10 +196,14 @@ export class Tree<V = any> {
         rotationNode.right = originalRightNode.left;
         originalRightNode.left = rotationNode;
 
-        return originalRightNode;
+        this.rotateFixParentConnection(rotationNode, originalRightNode, parent);
     }
 
-    private rotateRight(rotationNode: Node<V>): Node<V> {
+    /**
+     * @param rotationNode
+     * @param parent       `null` if `rotationNode` is root
+     */
+    private rotateRight(rotationNode: Node<V>, parent: Node<V> | null): void {
         const originalLeftNode = rotationNode.left;
         if (!originalLeftNode) {
             throw new RuntimeError('Left children of rotation node is null, this should never happen');
@@ -210,7 +211,19 @@ export class Tree<V = any> {
         rotationNode.left = originalLeftNode.right;
         originalLeftNode.right = rotationNode;
 
-        return originalLeftNode;
+        this.rotateFixParentConnection(rotationNode, originalLeftNode, parent);
+    }
+
+    private rotateFixParentConnection(rotationNode: Node<V>, originalNode: Node<V>, parent: Node<V> | null): void {
+        if (parent) {
+            if (parent.left === rotationNode) {
+                parent.left = originalNode;
+            } else {
+                parent.right = originalNode;
+            }
+        } else {
+            this.root = originalNode;
+        }
     }
 
     // /**
