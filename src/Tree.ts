@@ -280,7 +280,7 @@ export class Tree<V = any> {
         const [x, replacement, replacementParent] = this.determineXAndReplacement(nodeToRemove, parentNode);
 
         if (replacementParent) {
-            if (replacementParent.left === nodeToRemove) {
+            if (replacementParent.left === replacement) {
                 replacementParent.left = x;
             } else {
                 replacementParent.right = x;
