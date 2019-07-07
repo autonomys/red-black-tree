@@ -92,6 +92,10 @@ export class Tree<V = any> {
         if (!this.root) {
             throw new Error("Tree is empty, nothing to delete");
         }
+        if (!this.root.left && !this.root.right) {
+            this.root = null;
+            return;
+        }
         let currentNode = this.root;
         const path: Array<Node<V>> = [];
         while (true) {
@@ -279,29 +283,36 @@ export class Tree<V = any> {
         const parentNode = path.pop() || null;
         const [x, replacement, replacementParent] = this.determineXAndReplacement(nodeToRemove, parentNode);
 
-        if (replacementParent) {
-            if (replacementParent.left === replacement) {
-                replacementParent.left = x;
-            } else {
-                replacementParent.right = x;
-            }
-        }
         if (!parentNode) {
+            if (!replacement) {
+                throw new Error('Deleting root mode, but replacement is null, this should never happen');
+            }
             this.root = replacement;
         } else {
             if (parentNode.left === nodeToRemove) {
                 parentNode.left = replacement;
-            } else if (parentNode.right === nodeToRemove) {
+            } else {
                 parentNode.right = replacement;
             }
         }
+
         if (replacement) {
-            path.push(replacement);
-            if (replacement !== nodeToRemove.left) {
+            if (nodeToRemove.right === replacement) {
                 replacement.left = nodeToRemove.left;
-            }
-            if (replacement !== nodeToRemove.right) {
+                if (replacement !== x) {
+                    replacement.right = x;
+                }
+            } else if (nodeToRemove.left === replacement) {
                 replacement.right = nodeToRemove.right;
+                if (replacement !== x) {
+                    replacement.left = x;
+                }
+            } else if (replacementParent) {
+                if (replacementParent.left === replacement) {
+                    replacementParent.left = x;
+                } else {
+                    replacementParent.right = x;
+                }
             }
         }
 
@@ -344,19 +355,29 @@ export class Tree<V = any> {
      * @param nodeToRemove
      * @param nodeToRemoveParent
      *
-     * @return [x, replacement, replacementParent]
+     * @return [x, replacement, replacementParent, replacementToTheLeft]
      */
-    private determineXAndReplacement(nodeToRemove: Node<V>, nodeToRemoveParent: Node<V> | null): [Node<V> | null, Node<V> | null, Node<V> | null] {
+    private determineXAndReplacement(
+        nodeToRemove: Node<V>,
+        nodeToRemoveParent: Node<V> | null,
+    ): [
+        Node<V> | null,
+        Node<V> | null,
+        Node<V> | null,
+        boolean
+    ] {
         if (!nodeToRemove.left || !nodeToRemove.right) {
+            const replacement = nodeToRemove.left || nodeToRemove.right;
             return [
-                nodeToRemove.left || nodeToRemove.right,
-                nodeToRemove.left || nodeToRemove.right,
-                nodeToRemoveParent,
+                replacement,
+                replacement,
+                replacement ? nodeToRemove : nodeToRemoveParent,
+                Boolean(nodeToRemove.left),
             ];
         }
 
         let replacement = nodeToRemove.right;
-        let replacementParent: Node<V> | null = nodeToRemove;
+        let replacementParent = nodeToRemove;
         while (replacement.left) {
             replacementParent = replacement;
             replacement = replacement.left;
@@ -366,6 +387,7 @@ export class Tree<V = any> {
             replacement.right,
             replacement,
             replacementParent,
+            false,
         ];
     }
 
