@@ -281,7 +281,10 @@ export class Tree<V = any> {
     private removeNodeInternal(path: Array<Node<V>>): void {
         const nodeToRemove = path.pop() as Node<V>;
         const parentNode = path.pop() || null;
-        const [x, replacement, replacementParent] = this.determineXAndReplacement(nodeToRemove, parentNode);
+        const xPath = path.slice();
+        const xAndReplacement = this.determineXAndReplacement(nodeToRemove, parentNode, xPath);
+        const [x, replacement] = xAndReplacement;
+        let replacementParent = xAndReplacement[2];
 
         if (!parentNode) {
             if (!replacement) {
@@ -300,18 +303,31 @@ export class Tree<V = any> {
             if (nodeToRemove.right === replacement) {
                 replacement.left = nodeToRemove.left;
                 if (replacement !== x) {
+                    if (parentNode) {
+                        xPath.push(parentNode);
+                    }
                     replacement.right = x;
+                    replacementParent = replacement;
                 }
             } else if (nodeToRemove.left === replacement) {
                 replacement.right = nodeToRemove.right;
                 if (replacement !== x) {
+                    if (parentNode) {
+                        xPath.push(parentNode);
+                    }
                     replacement.left = x;
+                    replacementParent = replacement;
                 }
-            } else if (replacementParent) {
-                if (replacementParent.left === replacement) {
-                    replacementParent.left = x;
-                } else {
-                    replacementParent.right = x;
+            } else {
+                replacement.left = nodeToRemove.left;
+                replacement.right = nodeToRemove.right;
+                xPath.push(replacement);
+                if (replacementParent) {
+                    if (replacementParent.left === replacement) {
+                        replacementParent.left = x;
+                    } else {
+                        replacementParent.right = x;
+                    }
                 }
             }
         }
@@ -332,10 +348,7 @@ export class Tree<V = any> {
             !replacement.isRed
         ) {
             replacement.isRed = true;
-            if (parentNode) {
-                path.push(parentNode);
-            }
-            this.handleRemovalCases(x, replacement, path);
+            this.handleRemovalCases(x, replacement, xPath);
             return;
         }
 
@@ -348,18 +361,20 @@ export class Tree<V = any> {
             return;
         }
 
-        this.handleRemovalCases(x, replacementParent, path);
+        this.handleRemovalCases(x, replacementParent, xPath);
     }
 
     /**
      * @param nodeToRemove
      * @param nodeToRemoveParent
+     * @param xPath
      *
      * @return [x, replacement, replacementParent, replacementToTheLeft]
      */
     private determineXAndReplacement(
         nodeToRemove: Node<V>,
         nodeToRemoveParent: Node<V> | null,
+        xPath: Array<Node<V>>,
     ): [
         Node<V> | null,
         Node<V> | null,
@@ -381,6 +396,7 @@ export class Tree<V = any> {
         while (replacement.left) {
             replacementParent = replacement;
             replacement = replacement.left;
+            xPath.push(replacementParent);
         }
 
         return [
@@ -391,7 +407,7 @@ export class Tree<V = any> {
         ];
     }
 
-    private handleRemovalCases(x: Node<V> | null, xParent: Node<V> | null, path: Array<Node<V>>): void {
+    private handleRemovalCases(x: Node<V> | null, xParent: Node<V> | null, xPath: Array<Node<V>>): void {
         while (true) {
             if (!xParent) {
                 return;
@@ -422,13 +438,13 @@ export class Tree<V = any> {
             ) {
                 w.isRed = false;
                 xParent.isRed = true;
-                const xParentParent = path.pop() || null;
+                const xParentParent = xPath.pop() || null;
                 if (xParent.left === x) {
-                    this.rotateRight(xParent, xParentParent);
-                } else {
                     this.rotateLeft(xParent, xParentParent);
+                } else {
+                    this.rotateRight(xParent, xParentParent);
                 }
-                path.push(w);
+                xPath.push(w);
 
                 w = xParent.left === x ? xParent.right : xParent.left;
             }
@@ -458,7 +474,7 @@ export class Tree<V = any> {
                     x.isRed = false;
                     return;
                 } else {
-                    xParent = path.pop() as Node<V>;
+                    xParent = xPath.pop() as Node<V>;
                     if (!xParent) {
                         return;
                     }
@@ -537,7 +553,7 @@ export class Tree<V = any> {
             ) {
                 w.isRed = xParent.isRed;
                 xParent.isRed = false;
-                const xParentParent = path.pop() || null;
+                const xParentParent = xPath.pop() || null;
                 if (xParent.left === x) {
                     if (w.right) {
                         w.right.isRed = false;
