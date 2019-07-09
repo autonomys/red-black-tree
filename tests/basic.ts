@@ -10,15 +10,16 @@ interface ITreeWithRoot {
     root: Node<null>;
 }
 
-function validateRulesFollowed(tree: ITreeWithRoot): boolean {
+function validateRulesFollowed(t: test.Test, baseMessage: string, tree: ITreeWithRoot, expectedNumberOfNodes: number): void {
     if (tree.root === null) {
-        return true;
+        t.equal(expectedNumberOfNodes, 0, `${baseMessage}: Expected number of nodes is correct`);
+        return;
     }
-    return (
-        !tree.root.isRed &&
-        checkOrder(tree.root) &&
-        checkHeight(tree.root)
-    );
+
+    t.ok(!tree.root.isRed, `${baseMessage}: Root is black`);
+    t.equal(expectedNumberOfNodes, getNumberOfNotNullNodes(tree.root), `${baseMessage}: Expected number of nodes is correct`);
+    t.ok(checkOrder(tree.root), `${baseMessage}: Order of nodes is correct`);
+    t.ok(checkHeight(tree.root), `${baseMessage}: Height of sub-trees is correct`);
 }
 
 function checkOrder(node: Node<null>): boolean {
@@ -68,38 +69,36 @@ function getHeight(node: Node<null> | null): number | false {
     return (node.isRed ? 0 : 1) + leftHeight;
 }
 
+function getNumberOfNotNullNodes(node: Node<null> | null): number {
+    if (node === null) {
+        return 0;
+    }
+
+    return 1 + getNumberOfNotNullNodes(node.left) + getNumberOfNotNullNodes(node.right);
+}
+
 test('Basic test', (t) => {
     const keys: Uint8Array[] = [];
     for (let i = 0; i < 255; ++i) {
         keys.push(Uint8Array.of(i));
     }
     shuffle(keys);
-    // keys.length = 0;
-    // keys.push(Uint8Array.of(4));
-    // keys.push(Uint8Array.of(1));
-    // keys.push(Uint8Array.of(6));
-    // keys.push(Uint8Array.of(9));
 
     for (let i = 1; i <= 10; ++i) {
-    // for (let i = 1; i <= 1; ++i) {
         t.test(`Round ${i}`, (t) => {
             const tree = new Tree() as ITreeWithRoot & Tree;
+            let expectedNumberOfNodes = 0;
             for (const key of keys) {
+                ++expectedNumberOfNodes;
                 tree.addNode(key, null);
-                t.ok(validateRulesFollowed(tree), `Inserting key ${key[0]}`);
+                validateRulesFollowed(t, `Inserting key ${key[0]}`, tree, expectedNumberOfNodes);
             }
-
             shuffle(keys);
-            // keys.length = 0;
-            // keys.push(Uint8Array.of(9));
-            // keys.push(Uint8Array.of(4));
 
             for (const key of keys) {
-                // if (key[0] === 4) {
-                //     debugger;
-                // }
+                --expectedNumberOfNodes;
                 tree.removeNode(key);
-                t.ok(validateRulesFollowed(tree), `Deleting key ${key[0]}`);
+                validateRulesFollowed(t, `Deleting key ${key[0]}`, tree, expectedNumberOfNodes);
             }
 
             t.end();

@@ -303,25 +303,20 @@ export class Tree<V = any> {
             if (nodeToRemove.right === replacement) {
                 replacement.left = nodeToRemove.left;
                 if (replacement !== x) {
-                    if (parentNode) {
-                        xPath.push(parentNode);
-                    }
                     replacement.right = x;
                     replacementParent = replacement;
+                    xPath.pop();
                 }
             } else if (nodeToRemove.left === replacement) {
                 replacement.right = nodeToRemove.right;
                 if (replacement !== x) {
-                    if (parentNode) {
-                        xPath.push(parentNode);
-                    }
                     replacement.left = x;
                     replacementParent = replacement;
+                    xPath.pop();
                 }
             } else {
                 replacement.left = nodeToRemove.left;
                 replacement.right = nodeToRemove.right;
-                xPath.push(replacement);
                 if (replacementParent) {
                     if (replacementParent.left === replacement) {
                         replacementParent.left = x;
@@ -348,7 +343,7 @@ export class Tree<V = any> {
             !replacement.isRed
         ) {
             replacement.isRed = true;
-            this.handleRemovalCases(x, replacement, xPath);
+            this.handleRemovalCases(x, replacementParent, xPath);
             return;
         }
 
@@ -393,11 +388,17 @@ export class Tree<V = any> {
 
         let replacement = nodeToRemove.right;
         let replacementParent = nodeToRemove;
+        if (nodeToRemoveParent) {
+            xPath.push(nodeToRemoveParent);
+        }
+        const xPathExtra: Array<Node<V>> = [];
         while (replacement.left) {
             replacementParent = replacement;
             replacement = replacement.left;
-            xPath.push(replacementParent);
+            xPathExtra.push(replacementParent);
         }
+        xPathExtra.pop();
+        xPath.push(replacement, ...xPathExtra);
 
         return [
             replacement.right,
