@@ -10,11 +10,16 @@ interface ITreeWithRoot {
     root: Node<null>;
 }
 
-function validateRulesFollowed(tree: ITreeWithRoot): boolean {
-    return (
-        checkOrder(tree.root) &&
-        checkHeight(tree.root)
-    );
+function validateRulesFollowed(t: test.Test, baseMessage: string, tree: ITreeWithRoot, expectedNumberOfNodes: number): void {
+    if (tree.root === null) {
+        t.equal(expectedNumberOfNodes, 0, `${baseMessage}: Expected number of nodes is correct`);
+        return;
+    }
+
+    t.ok(!tree.root.isRed, `${baseMessage}: Root is black`);
+    t.equal(expectedNumberOfNodes, getNumberOfNotNullNodes(tree.root), `${baseMessage}: Expected number of nodes is correct`);
+    t.ok(checkOrder(tree.root), `${baseMessage}: Order of nodes is correct`);
+    t.ok(checkHeight(tree.root), `${baseMessage}: Height of sub-trees is correct`);
 }
 
 function checkOrder(node: Node<null>): boolean {
@@ -64,6 +69,14 @@ function getHeight(node: Node<null> | null): number | false {
     return (node.isRed ? 0 : 1) + leftHeight;
 }
 
+function getNumberOfNotNullNodes(node: Node<null> | null): number {
+    if (node === null) {
+        return 0;
+    }
+
+    return 1 + getNumberOfNotNullNodes(node.left) + getNumberOfNotNullNodes(node.right);
+}
+
 test('Basic test', (t) => {
     const keys: Uint8Array[] = [];
     for (let i = 0; i < 255; ++i) {
@@ -74,9 +87,18 @@ test('Basic test', (t) => {
     for (let i = 1; i <= 10; ++i) {
         t.test(`Round ${i}`, (t) => {
             const tree = new Tree() as ITreeWithRoot & Tree;
+            let expectedNumberOfNodes = 0;
             for (const key of keys) {
+                ++expectedNumberOfNodes;
                 tree.addNode(key, null);
-                t.ok(validateRulesFollowed(tree), `Inserting key ${key[0]}`);
+                validateRulesFollowed(t, `Inserting key ${key[0]}`, tree, expectedNumberOfNodes);
+            }
+            shuffle(keys);
+
+            for (const key of keys) {
+                --expectedNumberOfNodes;
+                tree.removeNode(key);
+                validateRulesFollowed(t, `Deleting key ${key[0]}`, tree, expectedNumberOfNodes);
             }
 
             t.end();
