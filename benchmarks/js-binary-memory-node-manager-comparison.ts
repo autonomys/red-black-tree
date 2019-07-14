@@ -1,7 +1,6 @@
 /* tslint:disable:no-console */
 import {randomBytes} from "crypto";
-import {NodeManagerJsUint8Array, Tree} from "../src";
-import {NodeManagerBinaryMemory} from "../src/NodeManagerBinaryMemory";
+import {NodeManagerBinaryMemory, NodeManagerJsUint8Array, Tree} from "../src";
 
 const LOOPS = 100;
 
