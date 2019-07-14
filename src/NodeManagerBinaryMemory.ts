@@ -1,18 +1,18 @@
 import {INodeManager} from "./INodeManager";
-import {NodeBinaryRAM} from "./NodeBinaryRAM";
+import {NodeBinaryMemory} from "./NodeBinaryMemory";
 import {RuntimeError} from "./RuntimeError";
 import {compareUint8Array, getOffsetFromBytes, maxNumberToBits, setOffsetToBytes} from "./utils";
 
 /**
  * Node manager implementation that can work with any data type supported in Node.js as a value
  */
-export class NodeManagerBinaryRAM implements INodeManager<Uint8Array, Uint8Array> {
-    public get root(): NodeBinaryRAM | null {
+export class NodeManagerBinaryMemory implements INodeManager<Uint8Array, Uint8Array> {
+    public get root(): NodeBinaryMemory | null {
         const offset = this.getRootNodeOffset();
         return offset === this.numberOfNodes ? null : this.getNode(offset);
     }
 
-    public set root(node: NodeBinaryRAM | null) {
+    public set root(node: NodeBinaryMemory | null) {
         if (node === null) {
             this.setRootNodeOffset(this.numberOfNodes);
         } else {
@@ -25,7 +25,7 @@ export class NodeManagerBinaryRAM implements INodeManager<Uint8Array, Uint8Array
      * @param keySize Size of the key in bytes
      * @param valueSize Size of the values associated with a key in bytes
      */
-    public static create(numberOfNodes: number, keySize: number, valueSize: number): NodeManagerBinaryRAM {
+    public static create(numberOfNodes: number, keySize: number, valueSize: number): NodeManagerBinaryMemory {
         // offset starts from 0, but addresses with index of last possible node + 1 will be treated as `null` node for everyone to reference
         const nodeOffsetBytes = Math.ceil(maxNumberToBits(numberOfNodes) / 8);
         // 1 byte for red/black flag and 2 * nodeOffsetBytes for left and right children
@@ -41,7 +41,7 @@ export class NodeManagerBinaryRAM implements INodeManager<Uint8Array, Uint8Array
         const buffer = Buffer.allocUnsafe(allocationSize);
         const uint8Array = new Uint8Array(buffer.buffer);
 
-        const instance = new NodeManagerBinaryRAM(
+        const instance = new NodeManagerBinaryMemory(
             uint8Array,
             numberOfNodes,
             nodeOffsetBytes,
@@ -69,7 +69,7 @@ export class NodeManagerBinaryRAM implements INodeManager<Uint8Array, Uint8Array
     ) {
     }
 
-    public addNode(key: Uint8Array, value: Uint8Array): NodeBinaryRAM {
+    public addNode(key: Uint8Array, value: Uint8Array): NodeBinaryMemory {
         const offset = this.allocateOffsetForAddition();
         const singleNodeAllocationSize = this.singleNodeAllocationSize;
         const nodeOffsetBytes = this.nodeOffsetBytes;
@@ -77,7 +77,7 @@ export class NodeManagerBinaryRAM implements INodeManager<Uint8Array, Uint8Array
             nodeOffsetBytes * 3 + singleNodeAllocationSize * offset,
             nodeOffsetBytes * 3 + singleNodeAllocationSize * (offset + 1),
         );
-        return NodeBinaryRAM.create(
+        return NodeBinaryMemory.create(
             nodeOffsetBytes,
             this.numberOfNodes,
             nodeData,
@@ -117,14 +117,14 @@ export class NodeManagerBinaryRAM implements INodeManager<Uint8Array, Uint8Array
         }
     }
 
-    private getNode(offset: number): NodeBinaryRAM {
+    private getNode(offset: number): NodeBinaryMemory {
         const singleNodeAllocationSize = this.singleNodeAllocationSize;
         const nodeOffsetBytes = this.nodeOffsetBytes;
         const nodeData = this.uint8Array.subarray(
             nodeOffsetBytes * 3 + singleNodeAllocationSize * offset,
             nodeOffsetBytes * 3 + singleNodeAllocationSize * (offset + 1),
         );
-        return NodeBinaryRAM.read(
+        return NodeBinaryMemory.read(
             nodeOffsetBytes,
             this.numberOfNodes,
             nodeData,
