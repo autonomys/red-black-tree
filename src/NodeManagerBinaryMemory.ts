@@ -88,11 +88,22 @@ export class NodeManagerBinaryMemory implements INodeManager<Uint8Array, Uint8Ar
         );
     }
 
-    public removeNode(): void {
-        // TODO
+    public removeNode(node: NodeBinaryMemory): void {
+        const singleNodeAllocationSize = this.singleNodeAllocationSize;
+        const nodeOffsetBytes = this.nodeOffsetBytes;
+        const offset = node.offset;
+        const nodeData = this.uint8Array.subarray(
+            nodeOffsetBytes * 3 + singleNodeAllocationSize * offset,
+            nodeOffsetBytes * 3 + singleNodeAllocationSize * (offset + 1),
+        );
+        const lastDeletedOffset = this.getDeletedNodeOffset();
+        // Store previous last deleted node in currently deleting node data
+        setOffsetToBytes(nodeData, this.nodeOffsetBytes, lastDeletedOffset);
+        // Update last deleted node offset
+        this.setDeletedNodeOffset(offset);
     }
 
-    public allocateOffsetForAddition(): number {
+    private allocateOffsetForAddition(): number {
         const numberOfNodes = this.numberOfNodes;
         const nodeOffsetBytes = this.nodeOffsetBytes;
         const singleNodeAllocationSize = this.singleNodeAllocationSize;
