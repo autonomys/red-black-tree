@@ -1,7 +1,7 @@
 import {INodeManager} from "./INodeManager";
 import {NodeBinaryMemory} from "./NodeBinaryMemory";
 import {RuntimeError} from "./RuntimeError";
-import {compareUint8Array, getOffsetFromBytes, maxNumberToBits, setOffsetToBytes} from "./utils";
+import {compareUint8Array, getOffsetFromBytes, maxNumberToBytes, setOffsetToBytes} from "./utils";
 
 /**
  * Node manager implementation that can work with any data type supported in Node.js as a value
@@ -27,9 +27,9 @@ export class NodeManagerBinaryMemory implements INodeManager<Uint8Array, Uint8Ar
      */
     public static create(numberOfNodes: number, keySize: number, valueSize: number): NodeManagerBinaryMemory {
         // offset starts from 0, but addresses with index of last possible node + 1 will be treated as `null` node for everyone to reference
-        const nodeOffsetBytes = Math.ceil(maxNumberToBits(numberOfNodes) / 8);
+        const nodeOffsetBytes = maxNumberToBytes(numberOfNodes);
         // 1 byte for red/black flag and 2 * nodeOffsetBytes for left and right children
-        const nodeMetadataSize = Math.ceil(1 + nodeOffsetBytes * 2);
+        const nodeMetadataSize = 1 + nodeOffsetBytes * 2;
         const singleNodeAllocationSize = nodeMetadataSize + keySize + valueSize;
         /**
          * * one offset for the first free offset for the next node to be inserted

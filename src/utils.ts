@@ -14,7 +14,7 @@ export function compareUint8Array(aKey: Uint8Array, bKey: Uint8Array): -1 | 0 | 
     return 0;
 }
 
-export function maxNumberToBits(maxNumber: number): number {
+export function maxNumberToBytes(maxNumber: number): number {
     if (maxNumber < 2 ** 8) {
         return 1;
     }
