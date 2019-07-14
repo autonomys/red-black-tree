@@ -75,6 +75,8 @@ export class NodeBinaryMemory implements INode<Uint8Array, Uint8Array> {
     }
 
     private isRedInternal: boolean;
+    private leftCache: NodeBinaryMemory | null | undefined = undefined;
+    private rightCache: NodeBinaryMemory | null | undefined = undefined;
 
     // noinspection JSUnusedGlobalSymbols IDE incorrectly doesn't match `key` and `value` with interface
     constructor(
@@ -90,13 +92,17 @@ export class NodeBinaryMemory implements INode<Uint8Array, Uint8Array> {
     }
 
     public get left(): NodeBinaryMemory | null {
-        const nodeOffsetBytes = this.nodeOffsetBytes;
-        const offset = getOffsetFromBytes(
-            this.nodeData.subarray(1, 1 + nodeOffsetBytes),
-            nodeOffsetBytes,
-        );
+        if (this.leftCache === undefined) {
+            const nodeOffsetBytes = this.nodeOffsetBytes;
+            const offset = getOffsetFromBytes(
+                this.nodeData.subarray(1, 1 + nodeOffsetBytes),
+                nodeOffsetBytes,
+            );
 
-        return offset === this.numberOfNodes ? null : this.getNode(offset);
+            this.leftCache = offset === this.numberOfNodes ? null : this.getNode(offset);
+        }
+
+        return this.leftCache;
     }
 
     public set left(node: NodeBinaryMemory | null) {
@@ -109,19 +115,25 @@ export class NodeBinaryMemory implements INode<Uint8Array, Uint8Array> {
             nodeOffsetBytes,
             node ? node.offset : this.numberOfNodes,
         );
+
+        this.leftCache = node;
     }
 
     public get right(): NodeBinaryMemory | null {
-        const nodeOffsetBytes = this.nodeOffsetBytes;
-        const offset = getOffsetFromBytes(
-            this.nodeData.subarray(
-                1 + nodeOffsetBytes,
-                1 + nodeOffsetBytes * 2,
-            ),
-            nodeOffsetBytes,
-        );
+        if (this.rightCache === undefined) {
+            const nodeOffsetBytes = this.nodeOffsetBytes;
+            const offset = getOffsetFromBytes(
+                this.nodeData.subarray(
+                    1 + nodeOffsetBytes,
+                    1 + nodeOffsetBytes * 2,
+                ),
+                nodeOffsetBytes,
+            );
 
-        return offset === this.numberOfNodes ? null : this.getNode(offset);
+            this.rightCache = offset === this.numberOfNodes ? null : this.getNode(offset);
+        }
+
+        return this.rightCache;
     }
 
     public set right(node: NodeBinaryMemory | null) {
@@ -134,5 +146,7 @@ export class NodeBinaryMemory implements INode<Uint8Array, Uint8Array> {
             nodeOffsetBytes,
             node ? node.offset : this.numberOfNodes,
         );
+
+        this.rightCache = node;
     }
 }
