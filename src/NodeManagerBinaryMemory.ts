@@ -7,19 +7,6 @@ import {compareUint8Array, getOffsetFromBytes, maxNumberToBytes, setOffsetToByte
  * Node manager implementation that can work with any data type supported in Node.js as a value
  */
 export class NodeManagerBinaryMemory implements INodeManager<Uint8Array, Uint8Array> {
-    public get root(): NodeBinaryMemory | null {
-        const offset = this.getRootNodeOffset();
-        return offset === this.numberOfNodes ? null : this.getNode(offset);
-    }
-
-    public set root(node: NodeBinaryMemory | null) {
-        if (node === null) {
-            this.setRootNodeOffset(this.numberOfNodes);
-        } else {
-            this.setRootNodeOffset(node.offset);
-        }
-    }
-
     /**
      * @param numberOfNodes Max number of nodes that are expected to be stored
      * @param keySize Size of the key in bytes
@@ -59,6 +46,8 @@ export class NodeManagerBinaryMemory implements INodeManager<Uint8Array, Uint8Ar
 
     public compare = compareUint8Array;
 
+    private rootCache: NodeBinaryMemory | null | undefined = undefined;
+
     private constructor(
         private readonly uint8Array: Uint8Array,
         private readonly numberOfNodes: number,
@@ -67,6 +56,24 @@ export class NodeManagerBinaryMemory implements INodeManager<Uint8Array, Uint8Ar
         private readonly valueSize: number,
         private readonly singleNodeAllocationSize: number,
     ) {
+    }
+
+    public get root(): NodeBinaryMemory | null {
+        if (this.rootCache === undefined) {
+            const offset = this.getRootNodeOffset();
+            this.rootCache = offset === this.numberOfNodes ? null : this.getNode(offset);
+        }
+
+        return this.rootCache;
+    }
+
+    public set root(node: NodeBinaryMemory | null) {
+        this.rootCache = node;
+        if (node === null) {
+            this.setRootNodeOffset(this.numberOfNodes);
+        } else {
+            this.setRootNodeOffset(node.offset);
+        }
     }
 
     public addNode(key: Uint8Array, value: Uint8Array): NodeBinaryMemory {
