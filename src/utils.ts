@@ -1,6 +1,19 @@
 /* tslint:disable:no-bitwise */
 import {RuntimeError} from "./RuntimeError";
 
+export function compareUint8Array(aKey: Uint8Array, bKey: Uint8Array): -1 | 0 | 1 {
+    const length = aKey.length;
+    for (let i = 0; i < length; ++i) {
+        const diff = aKey[i] - bKey[i];
+        if (diff < 0) {
+            return -1;
+        } else if (diff > 0) {
+            return 1;
+        }
+    }
+    return 0;
+}
+
 export function maxNumberToBits(maxNumber: number): number {
     if (maxNumber < 2 ** 8) {
         return 1;

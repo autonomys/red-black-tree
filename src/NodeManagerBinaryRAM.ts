@@ -1,7 +1,7 @@
 import {INodeManager} from "./INodeManager";
 import {NodeBinaryRAM} from "./NodeBinaryRAM";
 import {RuntimeError} from "./RuntimeError";
-import {getOffsetFromBytes, maxNumberToBits, setOffsetToBytes} from "./utils";
+import {compareUint8Array, getOffsetFromBytes, maxNumberToBits, setOffsetToBytes} from "./utils";
 
 /**
  * Node manager implementation that can work with any data type supported in Node.js as a value
@@ -57,6 +57,8 @@ export class NodeManagerBinaryRAM implements INodeManager<Uint8Array, Uint8Array
         return instance;
     }
 
+    public compare = compareUint8Array;
+
     private constructor(
         private readonly uint8Array: Uint8Array,
         private readonly numberOfNodes: number,
@@ -84,19 +86,6 @@ export class NodeManagerBinaryRAM implements INodeManager<Uint8Array, Uint8Array
             value,
             this.getNode.bind(this),
         );
-    }
-
-    public compare(aKey: Uint8Array, bKey: Uint8Array): -1 | 0 | 1 {
-        const length = aKey.length;
-        for (let i = 0; i < length; ++i) {
-            const diff = aKey[i] - bKey[i];
-            if (diff < 0) {
-                return -1;
-            } else if (diff > 0) {
-                return 1;
-            }
-        }
-        return 0;
     }
 
     public removeNode(): void {
