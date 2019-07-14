@@ -16,4 +16,8 @@ export abstract class NodeManagerJs<K, V> implements INodeManager<K, V> {
     public removeNode(): void {
         // Nothing is needed to remove a node
     }
+
+    public cleanup(): void {
+        // No cleanup is needed
+    }
 }

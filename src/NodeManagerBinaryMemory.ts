@@ -110,6 +110,10 @@ export class NodeManagerBinaryMemory implements INodeManager<Uint8Array, Uint8Ar
         this.setDeletedNodeOffset(offset);
     }
 
+    public cleanup(): void {
+        this.rootCache = undefined;
+    }
+
     private allocateOffsetForAddition(): number {
         const numberOfNodes = this.numberOfNodes;
         const nodeOffsetBytes = this.nodeOffsetBytes;

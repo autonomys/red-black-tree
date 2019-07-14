@@ -19,6 +19,34 @@ export class Tree<K, V> {
      * @param value Value to be associated with a key
      */
     public addNode(key: K, value: V): void {
+        this.addNodeInternal(key, value);
+        this.nodeManager.cleanup();
+    }
+
+    /**
+     * Remove a node from the tree
+     *
+     * @param key A key to be removed, e.g. a 32 byte piece id
+     */
+    public removeNode(key: K): void {
+        this.removeNodeInternal(key);
+        this.nodeManager.cleanup();
+    }
+
+    /**
+     * Get the closest node/key in a tree to a given target in the same key space
+     *
+     * @param targetKey The target for evaluation, e.g. a challenge in the same key space
+     *
+     * @return The closest key to the challenge or `null` if no nodes are available
+     */
+    public getClosestNode(targetKey: K): K | null {
+        const result = this.getClosestNodeInternal(targetKey);
+        this.nodeManager.cleanup();
+        return result;
+    }
+
+    private addNodeInternal(key: K, value: V): void {
         const nodeManager = this.nodeManager;
         const nodeToInsert = nodeManager.addNode(key, value);
 
@@ -67,12 +95,7 @@ export class Tree<K, V> {
     // public addNodeSet(keySet: Uint8Array[]) {
     // }
 
-    /**
-     * Remove a node from the tree
-     *
-     * @param key A key to be removed, e.g. a 32 byte piece id
-     */
-    public removeNode(key: K): void {
+    private removeNodeInternal(key: K): void {
         const nodeManager = this.nodeManager;
         const root = nodeManager.root;
 
@@ -107,21 +130,14 @@ export class Tree<K, V> {
                         nodeManager.root = null;
                         return;
                     }
-                    this.removeNodeInternal(path);
+                    this.removeNodeImplementation(path);
                     nodeManager.removeNode(currentNode);
                     return;
             }
         }
     }
 
-    /**
-     * Get the closest node/key in a tree to a given target in the same key space
-     *
-     * @param targetKey The target for evaluation, e.g. a challenge in the same key space
-     *
-     * @return The closest key to the challenge or `null` if no nodes are available
-     */
-    public getClosestNode(targetKey: K): K | null {
+    private getClosestNodeInternal(targetKey: K): K | null {
         const nodeManager = this.nodeManager;
         let currentNode = nodeManager.root;
         if (!currentNode) {
@@ -267,7 +283,7 @@ export class Tree<K, V> {
     // public open(path: string): Tree {
     // }
 
-    private removeNodeInternal(path: Array<INode<K, V>>): void {
+    private removeNodeImplementation(path: Array<INode<K, V>>): void {
         const nodeToRemove = path.pop() as INode<K, V>;
         const parentNode = path.pop() || null;
         const xPath = path.slice();
