@@ -106,8 +106,8 @@ export class NodeBinaryMemory implements INode<Uint8Array, Uint8Array> {
                 1,
                 1 + nodeOffsetBytes,
             ),
-            node ? node.offset : this.numberOfNodes,
             nodeOffsetBytes,
+            node ? node.offset : this.numberOfNodes,
         );
     }
 
@@ -131,8 +131,8 @@ export class NodeBinaryMemory implements INode<Uint8Array, Uint8Array> {
                 1 + nodeOffsetBytes,
                 1 + nodeOffsetBytes * 2,
             ),
-            node ? node.offset : this.numberOfNodes,
             nodeOffsetBytes,
+            node ? node.offset : this.numberOfNodes,
         );
     }
 }

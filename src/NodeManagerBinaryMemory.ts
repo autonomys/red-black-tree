@@ -98,7 +98,7 @@ export class NodeManagerBinaryMemory implements INodeManager<Uint8Array, Uint8Ar
         );
         const lastDeletedOffset = this.getDeletedNodeOffset();
         // Store previous last deleted node in currently deleting node data
-        setOffsetToBytes(nodeData, this.nodeOffsetBytes, lastDeletedOffset);
+        setOffsetToBytes(nodeData, nodeOffsetBytes, lastDeletedOffset);
         // Update last deleted node offset
         this.setDeletedNodeOffset(offset);
     }
