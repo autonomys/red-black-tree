@@ -28,7 +28,7 @@ export class Tree<K, V> {
         } else {
             let currentNode = nodeManager.root;
             const path: Array<INode<K, V>> = [];
-            depth: while (true) {
+            while (true) {
                 path.push(currentNode);
                 switch (nodeManager.compare(nodeToInsert.key, currentNode.key)) {
                     case -1:
@@ -39,7 +39,7 @@ export class Tree<K, V> {
                             currentNode.left = nodeToInsert;
                             path.push(nodeToInsert);
                             this.fixTree(path);
-                            break depth;
+                            return;
                         }
                     case 1:
                         if (currentNode.right) {
@@ -49,7 +49,7 @@ export class Tree<K, V> {
                             currentNode.right = nodeToInsert;
                             path.push(nodeToInsert);
                             this.fixTree(path);
-                            break depth;
+                            return;
                         }
                     default:
                         // We do not insert the same key again
