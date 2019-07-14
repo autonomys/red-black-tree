@@ -31,36 +31,43 @@ export function maxNumberToBytes(maxNumber: number): number {
 }
 
 export function getOffsetFromBytes(source: Uint8Array, nodeOffsetBytes: number): number {
-    const view = new DataView(source.buffer, source.byteOffset, source.byteLength);
     switch (nodeOffsetBytes) {
-        case 4:
-            return view.getUint32(0, false);
-        case 3:
-            return (view.getUint8(0) << 16) + view.getUint16(1, false);
-        case 2:
-            return view.getUint16(0, false);
+        case 4: {
+            return (source[0] << 24) + (source[1] << 16) + (source[2] << 8) + source[3];
+        }
+        case 3: {
+            return (source[0] << 16) + (source[1] << 8) + source[2];
+        }
+        case 2: {
+            return (source[0] << 8) + source[1];
+        }
         case 1:
-            return view.getUint8(0);
+            return source[0];
         default:
             throw new RuntimeError("Unsupported number of nodes");
     }
 }
 
 export function setOffsetToBytes(source: Uint8Array, nodeOffsetBytes: number, offset: number): void {
-    const view = new DataView(source.buffer, source.byteOffset, source.byteLength);
     switch (nodeOffsetBytes) {
-        case 4:
+        case 4: {
+            const view = new DataView(source.buffer, source.byteOffset, source.byteLength);
             view.setUint32(0, offset, false);
             return;
-        case 3:
+        }
+        case 3: {
+            const view = new DataView(source.buffer, source.byteOffset, source.byteLength);
             view.setUint8(0, offset >> 16);
-            view.setUint16(1, offset % (2 ** 16), false);
+            view.setUint16(1, offset % (1 << 16), false);
             return;
-        case 2:
+        }
+        case 2: {
+            const view = new DataView(source.buffer, source.byteOffset, source.byteLength);
             view.setUint16(0, offset, false);
             return;
+        }
         case 1:
-            view.setUint8(0, offset);
+            source.set([offset]);
             return;
         default:
             throw new RuntimeError("Unsupported number of nodes");

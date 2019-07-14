@@ -45,7 +45,7 @@ export class NodeBinaryMemory implements INode<Uint8Array, Uint8Array> {
         return new NodeBinaryMemory(
             offset,
             key,
-            value,
+            value.length,
             nodeData,
             nodeOffsetBytes,
             numberOfNodes,
@@ -66,7 +66,7 @@ export class NodeBinaryMemory implements INode<Uint8Array, Uint8Array> {
         return new NodeBinaryMemory(
             offset,
             nodeData.subarray(baseOffset, baseOffset + keySize),
-            nodeData.subarray(baseOffset + keySize, baseOffset + keySize + valueSize),
+            valueSize,
             nodeData,
             nodeOffsetBytes,
             numberOfNodes,
@@ -78,11 +78,10 @@ export class NodeBinaryMemory implements INode<Uint8Array, Uint8Array> {
     private leftCache: NodeBinaryMemory | null | undefined = undefined;
     private rightCache: NodeBinaryMemory | null | undefined = undefined;
 
-    // noinspection JSUnusedGlobalSymbols IDE incorrectly doesn't match `key` and `value` with interface
     constructor(
         public readonly offset: number,
         public readonly key: Uint8Array,
-        public readonly value: Uint8Array,
+        private readonly valueSize: number,
         private readonly nodeData: Uint8Array,
         private readonly nodeOffsetBytes: number,
         private readonly numberOfNodes: number,
@@ -148,5 +147,10 @@ export class NodeBinaryMemory implements INode<Uint8Array, Uint8Array> {
         );
 
         this.rightCache = node;
+    }
+
+    public get value(): Uint8Array {
+        const baseOffset = 1 + this.nodeOffsetBytes * 2 + this.key.length;
+        return this.nodeData.subarray(baseOffset, baseOffset + this.valueSize);
     }
 }
