@@ -1,32 +1,34 @@
 import * as test from "tape";
+import {NodeManagerJsNumber} from "../src/NodeManagerJsNumber";
 import {Tree} from "../src/Tree";
 
 test('Search', (t) => {
-    const keys: Uint8Array[] = [];
+    const keys: number[] = [];
     for (let i = 10; i < 250; ++i) {
-        keys.push(Uint8Array.of(i));
+        keys.push(i);
     }
 
-    const tree = new Tree();
+    const nodeManager = new NodeManagerJsNumber<null>();
+    const tree = new Tree(nodeManager);
     for (const key of keys) {
         tree.addNode(key, null);
     }
 
     t.same(
-        tree.getClosestNode(Uint8Array.of(1)),
-        Uint8Array.of(10),
+        tree.getClosestNode(1),
+        10,
         'Non-existing lower end takes closest key',
     );
 
     t.same(
-        tree.getClosestNode(Uint8Array.of(255)),
-        Uint8Array.of(249),
+        tree.getClosestNode(255),
+        249,
         'Non-existing higher end takes closest key',
     );
 
     t.same(
-        tree.getClosestNode(Uint8Array.of(128)),
-        Uint8Array.of(128),
+        tree.getClosestNode(128),
+        128,
         'Existing takes exact key',
     );
 

@@ -1,24 +1,6 @@
-import {Node} from "./Node";
+import {INode} from "./INode";
+import {INodeManager} from "./INodeManager";
 import {RuntimeError} from "./RuntimeError";
-
-/**
- * @param a
- * @param b
- *
- * @return `-1` if `a` is smaller than `b`, `1` is `a` is bigger than `b` and `0` if they are equal
- */
-function compare(a: Uint8Array, b: Uint8Array): number {
-    const length = a.length;
-    for (let i = 0; i < length; ++i) {
-        const diff = a[i] - b[i];
-        if (diff < 0) {
-            return -1;
-        } else if (diff > 0) {
-            return 1;
-        }
-    }
-    return 0;
-}
 
 /**
  * Resources used to write this:
@@ -26,8 +8,9 @@ function compare(a: Uint8Array, b: Uint8Array): number {
  * * https://www.youtube.com/watch?v=YCo2-H2CL6Q
  * * https://www.youtube.com/watch?v=eO3GzpCCUSg
  */
-export class Tree<V = any> {
-    private root: Node<V> | null = null;
+export class Tree<K, V> {
+    constructor(private nodeManager: INodeManager<K, V>) {
+    }
 
     /**
      * Add nodes to a tree one by one (for incremental updates)
@@ -35,18 +18,19 @@ export class Tree<V = any> {
      * @param key  A key to be indexed, e.g. a 32 byte piece id
      * @param value Value to be associated with a key
      */
-    public addNode(key: Uint8Array, value: V): void {
-        const nodeToInsert = new Node(key, value);
+    public addNode(key: K, value: V): void {
+        const nodeManager = this.nodeManager;
+        const nodeToInsert = nodeManager.addNode(key, value);
 
-        if (!this.root) {
+        if (!nodeManager.root) {
             nodeToInsert.isRed = false;
-            this.root = nodeToInsert;
+            nodeManager.root = nodeToInsert;
         } else {
-            let currentNode = this.root;
-            const path: Array<Node<V>> = [];
+            let currentNode = nodeManager.root;
+            const path: Array<INode<K, V>> = [];
             depth: while (true) {
                 path.push(currentNode);
-                switch (compare(nodeToInsert.key, currentNode.key)) {
+                switch (nodeManager.compare(nodeToInsert.key, currentNode.key)) {
                     case -1:
                         if (currentNode.left) {
                             currentNode = currentNode.left;
@@ -88,19 +72,22 @@ export class Tree<V = any> {
      *
      * @param key A key to be removed, e.g. a 32 byte piece id
      */
-    public removeNode(key: Uint8Array): void {
-        if (!this.root) {
+    public removeNode(key: K): void {
+        const nodeManager = this.nodeManager;
+        const root = nodeManager.root;
+
+        if (!root) {
             throw new Error("Tree is empty, nothing to delete");
         }
-        if (!this.root.left && !this.root.right) {
-            this.root = null;
+        if (!root.left && !root.right) {
+            nodeManager.root = null;
             return;
         }
-        let currentNode = this.root;
-        const path: Array<Node<V>> = [];
+        let currentNode = root;
+        const path: Array<INode<K, V>> = [];
         while (true) {
             path.push(currentNode);
-            switch (compare(key, currentNode.key)) {
+            switch (nodeManager.compare(key, currentNode.key)) {
                 case -1:
                     if (currentNode.left) {
                         currentNode = currentNode.left;
@@ -116,8 +103,8 @@ export class Tree<V = any> {
                         throw new Error("Can't delete a key, it doesn't exist");
                     }
                 default:
-                    if (currentNode === this.root && !this.root.left && !this.root.right) {
-                        this.root = null;
+                    if (currentNode === root && !root.left && !root.right) {
+                        nodeManager.root = null;
                         return;
                     }
                     this.removeNodeInternal(path);
@@ -129,17 +116,18 @@ export class Tree<V = any> {
     /**
      * Get the closest node/key in a tree to a given target in the same key space
      *
-     * @param target The target for evaluation, e.g. a challenge in the same key space
+     * @param targetKey The target for evaluation, e.g. a challenge in the same key space
      *
      * @return The closest key to the challenge or `null` if no nodes are available
      */
-    public getClosestNode(target: Uint8Array): Uint8Array | null {
-        let currentNode = this.root;
+    public getClosestNode(targetKey: K): K | null {
+        const nodeManager = this.nodeManager;
+        let currentNode = nodeManager.root;
         if (!currentNode) {
             return null;
         }
         while (true) {
-            switch (compare(target, currentNode.key)) {
+            switch (nodeManager.compare(targetKey, currentNode.key)) {
                 case -1:
                     if (currentNode.left) {
                         currentNode = currentNode.left;
@@ -160,7 +148,7 @@ export class Tree<V = any> {
         }
     }
 
-    private fixTree(path: Array<Node<V>>): void {
+    private fixTree(path: Array<INode<K, V>>): void {
         while (path.length) {
             const targetNode = path.pop();
             if (!targetNode) {
@@ -184,7 +172,7 @@ export class Tree<V = any> {
             // Here we handle `null` as black `nil` node implicitly, since we do not create `nil` nodes as such
             if (uncle && uncle.isRed) {
                 parent.isRed = !parent.isRed;
-                grandParent.isRed = grandParent === this.root ? false : !grandParent.isRed;
+                grandParent.isRed = grandParent === this.nodeManager.root ? false : !grandParent.isRed;
                 uncle.isRed = false;
                 path.push(grandParent);
                 continue;
@@ -224,7 +212,7 @@ export class Tree<V = any> {
      * @param rotationNode
      * @param parent       `null` if `rotationNode` is root
      */
-    private rotateLeft(rotationNode: Node<V>, parent: Node<V> | null): void {
+    private rotateLeft(rotationNode: INode<K, V>, parent: INode<K, V> | null): void {
         const originalRightNode = rotationNode.right;
         if (!originalRightNode) {
             throw new RuntimeError('Right children of rotation node is null, this should never happen');
@@ -239,7 +227,7 @@ export class Tree<V = any> {
      * @param rotationNode
      * @param parent       `null` if `rotationNode` is root
      */
-    private rotateRight(rotationNode: Node<V>, parent: Node<V> | null): void {
+    private rotateRight(rotationNode: INode<K, V>, parent: INode<K, V> | null): void {
         const originalLeftNode = rotationNode.left;
         if (!originalLeftNode) {
             throw new RuntimeError('Left children of rotation node is null, this should never happen');
@@ -250,7 +238,7 @@ export class Tree<V = any> {
         this.rotateFixParentConnection(rotationNode, originalLeftNode, parent);
     }
 
-    private rotateFixParentConnection(rotationNode: Node<V>, originalNode: Node<V>, parent: Node<V> | null): void {
+    private rotateFixParentConnection(rotationNode: INode<K, V>, originalNode: INode<K, V>, parent: INode<K, V> | null): void {
         if (parent) {
             if (parent.left === rotationNode) {
                 parent.left = originalNode;
@@ -258,7 +246,7 @@ export class Tree<V = any> {
                 parent.right = originalNode;
             }
         } else {
-            this.root = originalNode;
+            this.nodeManager.root = originalNode;
         }
     }
 
@@ -278,8 +266,8 @@ export class Tree<V = any> {
     // public open(path: string): Tree {
     // }
 
-    private removeNodeInternal(path: Array<Node<V>>): void {
-        const nodeToRemove = path.pop() as Node<V>;
+    private removeNodeInternal(path: Array<INode<K, V>>): void {
+        const nodeToRemove = path.pop() as INode<K, V>;
         const parentNode = path.pop() || null;
         const xPath = path.slice();
         const xAndReplacement = this.determineXAndReplacement(nodeToRemove, parentNode, xPath);
@@ -290,7 +278,7 @@ export class Tree<V = any> {
             if (!replacement) {
                 throw new Error('Deleting root mode, but replacement is null, this should never happen');
             }
-            this.root = replacement;
+            this.nodeManager.root = replacement;
         } else {
             if (parentNode.left === nodeToRemove) {
                 parentNode.left = replacement;
@@ -367,13 +355,13 @@ export class Tree<V = any> {
      * @return [x, replacement, replacementParent, replacementToTheLeft]
      */
     private determineXAndReplacement(
-        nodeToRemove: Node<V>,
-        nodeToRemoveParent: Node<V> | null,
-        xPath: Array<Node<V>>,
+        nodeToRemove: INode<K, V>,
+        nodeToRemoveParent: INode<K, V> | null,
+        xPath: Array<INode<K, V>>,
     ): [
-        Node<V> | null,
-        Node<V> | null,
-        Node<V> | null,
+        INode<K, V> | null,
+        INode<K, V> | null,
+        INode<K, V> | null,
         boolean
     ] {
         if (!nodeToRemove.left || !nodeToRemove.right) {
@@ -391,7 +379,7 @@ export class Tree<V = any> {
         if (nodeToRemoveParent) {
             xPath.push(nodeToRemoveParent);
         }
-        const xPathExtra: Array<Node<V>> = [];
+        const xPathExtra: Array<INode<K, V>> = [];
         while (replacement.left) {
             replacementParent = replacement;
             replacement = replacement.left;
@@ -408,7 +396,7 @@ export class Tree<V = any> {
         ];
     }
 
-    private handleRemovalCases(x: Node<V> | null, xParent: Node<V> | null, xPath: Array<Node<V>>): void {
+    private handleRemovalCases(x: INode<K, V> | null, xParent: INode<K, V> | null, xPath: Array<INode<K, V>>): void {
         while (true) {
             if (!xParent) {
                 return;
@@ -475,7 +463,7 @@ export class Tree<V = any> {
                     x.isRed = false;
                     return;
                 } else {
-                    xParent = xPath.pop() as Node<V>;
+                    xParent = xPath.pop() as INode<K, V>;
                     if (!xParent) {
                         return;
                     }
