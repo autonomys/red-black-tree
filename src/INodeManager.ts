@@ -7,5 +7,5 @@ export interface INodeManager<K, V> {
 
     compare(aKey: K, bKey: K): -1 | 0 | 1;
 
-    removeNode(key: K): void;
+    removeNode(node: INode<K, V>): void;
 }

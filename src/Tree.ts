@@ -108,6 +108,7 @@ export class Tree<K, V> {
                         return;
                     }
                     this.removeNodeInternal(path);
+                    nodeManager.removeNode(currentNode);
                     return;
             }
         }
