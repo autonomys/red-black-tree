@@ -1,8 +1,6 @@
 import shuffle = require("shuffle-array");
 import * as test from "tape";
-import {INode} from "../src/INode";
-import {NodeManagerJsNumber} from "../src/NodeManagerJsNumber";
-import {Tree} from "../src/Tree";
+import {INode, NodeManagerJsNumber, Tree} from "../src";
 
 function validateRulesFollowed(t: test.Test, baseMessage: string, nodesManager: NodeManagerJsNumber<null>, expectedNumberOfNodes: number): void {
     if (nodesManager.root === null) {

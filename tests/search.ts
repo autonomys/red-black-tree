@@ -1,6 +1,5 @@
 import * as test from "tape";
-import {NodeManagerJsNumber} from "../src/NodeManagerJsNumber";
-import {Tree} from "../src/Tree";
+import {NodeManagerJsNumber, Tree} from "../src";
 
 test('Search', (t) => {
     const keys: number[] = [];
