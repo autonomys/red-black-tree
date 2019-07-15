@@ -1,28 +1,21 @@
 import shuffle = require("shuffle-array");
 import * as test from "tape";
-import {Node} from "../src/Node";
-import {Tree} from "../src/Tree";
+import {INode, Tree} from "../src";
+import {NodeManagerBinaryMemory} from "../src/NodeManagerBinaryMemory";
 
-/**
- * Here we hack `root` property, which is an implementation detail, but needed for tests to run
- */
-interface ITreeWithRoot {
-    root: Node<null>;
-}
-
-function validateRulesFollowed(t: test.Test, baseMessage: string, tree: ITreeWithRoot, expectedNumberOfNodes: number): void {
-    if (tree.root === null) {
+function validateRulesFollowed(t: test.Test, baseMessage: string, nodesManager: NodeManagerBinaryMemory, expectedNumberOfNodes: number): void {
+    if (nodesManager.root === null) {
         t.equal(expectedNumberOfNodes, 0, `${baseMessage}: Expected number of nodes is correct`);
         return;
     }
 
-    t.ok(!tree.root.isRed, `${baseMessage}: Root is black`);
-    t.equal(expectedNumberOfNodes, getNumberOfNotNullNodes(tree.root), `${baseMessage}: Expected number of nodes is correct`);
-    t.ok(checkOrder(tree.root), `${baseMessage}: Order of nodes is correct`);
-    t.ok(checkHeight(tree.root), `${baseMessage}: Height of sub-trees is correct`);
+    t.ok(!nodesManager.root.isRed, `${baseMessage}: Root is black`);
+    t.equal(expectedNumberOfNodes, getNumberOfNotNullNodes(nodesManager.root), `${baseMessage}: Expected number of nodes is correct`);
+    t.ok(checkOrder(nodesManager.root), `${baseMessage}: Order of nodes is correct`);
+    t.ok(checkHeight(nodesManager.root), `${baseMessage}: Height of sub-trees is correct`);
 }
 
-function checkOrder(node: Node<null>): boolean {
+function checkOrder(node: INode<Uint8Array, Uint8Array>): boolean {
     if (!node.isRed) {
         return (
             (
@@ -53,11 +46,11 @@ function checkOrder(node: Node<null>): boolean {
     );
 }
 
-function checkHeight(node: Node<null>): boolean {
+function checkHeight(node: INode<Uint8Array, Uint8Array>): boolean {
     return getHeight(node) !== false;
 }
 
-function getHeight(node: Node<null> | null): number | false {
+function getHeight(node: INode<Uint8Array, Uint8Array> | null): number | false {
     if (!node) {
         return 1;
     }
@@ -69,7 +62,7 @@ function getHeight(node: Node<null> | null): number | false {
     return (node.isRed ? 0 : 1) + leftHeight;
 }
 
-function getNumberOfNotNullNodes(node: Node<null> | null): number {
+function getNumberOfNotNullNodes(node: INode<Uint8Array, Uint8Array> | null): number {
     if (node === null) {
         return 0;
     }
@@ -78,27 +71,27 @@ function getNumberOfNotNullNodes(node: Node<null> | null): number {
 }
 
 test('Basic test', (t) => {
-    const keys: Uint8Array[] = [];
+    const keys: number[] = [];
     for (let i = 0; i < 255; ++i) {
-        keys.push(Uint8Array.of(i));
+        keys.push(i);
     }
-    shuffle(keys);
 
     for (let i = 1; i <= 10; ++i) {
         t.test(`Round ${i}`, (t) => {
-            const tree = new Tree() as ITreeWithRoot & Tree;
+            const nodeManager = NodeManagerBinaryMemory.create(300, 1, 0);
+            const tree = new Tree(nodeManager);
             let expectedNumberOfNodes = 0;
             for (const key of keys) {
                 ++expectedNumberOfNodes;
-                tree.addNode(key, null);
-                validateRulesFollowed(t, `Inserting key ${key[0]}`, tree, expectedNumberOfNodes);
+                tree.addNode(Uint8Array.of(key), new Uint8Array(0));
+                validateRulesFollowed(t, `Inserting key ${key}`, nodeManager, expectedNumberOfNodes);
             }
             shuffle(keys);
 
             for (const key of keys) {
                 --expectedNumberOfNodes;
-                tree.removeNode(key);
-                validateRulesFollowed(t, `Deleting key ${key[0]}`, tree, expectedNumberOfNodes);
+                tree.removeNode(Uint8Array.of(key));
+                validateRulesFollowed(t, `Deleting key ${key}`, nodeManager, expectedNumberOfNodes);
             }
 
             t.end();
