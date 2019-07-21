@@ -30,44 +30,55 @@ export function maxNumberToBytes(maxNumber: number): number {
     throw new RuntimeError("Can't store that many nodes");
 }
 
-export function getOffsetFromBytes(source: Uint8Array, nodeOffsetBytes: number): number {
-    switch (nodeOffsetBytes) {
+/**
+ * @param source
+ * @param offset At which offset in bytes to start reading a number
+ * @param numberOfBytes How many bytes are used to store a number
+ */
+export function getNumberFromBytes(source: Uint8Array, offset: number, numberOfBytes: number): number {
+    switch (numberOfBytes) {
         case 4: {
-            return (source[0] << 24) + (source[1] << 16) + (source[2] << 8) + source[3];
+            return (source[offset] << 24) + (source[offset + 1] << 16) + (source[offset + 2] << 8) + source[offset + 3];
         }
         case 3: {
-            return (source[0] << 16) + (source[1] << 8) + source[2];
+            return (source[offset] << 16) + (source[offset + 1] << 8) + source[offset + 2];
         }
         case 2: {
-            return (source[0] << 8) + source[1];
+            return (source[offset] << 8) + source[offset + 1];
         }
         case 1:
-            return source[0];
+            return source[offset];
         default:
             throw new RuntimeError("Unsupported number of nodes");
     }
 }
 
-export function setOffsetToBytes(source: Uint8Array, nodeOffsetBytes: number, offset: number): void {
-    switch (nodeOffsetBytes) {
+/**
+ * @param source
+ * @param offset At which offset in bytes to start writing a number
+ * @param numberOfBytes How many bytes are used to store a number
+ * @param newNumber Number that should be set
+ */
+export function setNumberToBytes(source: Uint8Array, offset: number, numberOfBytes: number, newNumber: number): void {
+    switch (numberOfBytes) {
         case 4: {
-            const view = new DataView(source.buffer, source.byteOffset, source.byteLength);
-            view.setUint32(0, offset, false);
+            const view = new DataView(source.buffer, source.byteOffset + offset, numberOfBytes);
+            view.setUint32(0, newNumber, false);
             return;
         }
         case 3: {
-            const view = new DataView(source.buffer, source.byteOffset, source.byteLength);
-            view.setUint8(0, offset >> 16);
-            view.setUint16(1, offset % (1 << 16), false);
+            const view = new DataView(source.buffer, source.byteOffset + offset, numberOfBytes);
+            view.setUint8(0, newNumber >> 16);
+            view.setUint16(1, newNumber % (1 << 16), false);
             return;
         }
         case 2: {
-            const view = new DataView(source.buffer, source.byteOffset, source.byteLength);
-            view.setUint16(0, offset, false);
+            const view = new DataView(source.buffer, source.byteOffset + offset, numberOfBytes);
+            view.setUint16(0, newNumber, false);
             return;
         }
         case 1:
-            source.set([offset]);
+            source.set([newNumber], offset);
             return;
         default:
             throw new RuntimeError("Unsupported number of nodes");

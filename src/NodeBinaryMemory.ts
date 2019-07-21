@@ -1,5 +1,5 @@
 import {INode} from "./INode";
-import {getOffsetFromBytes, setOffsetToBytes} from "./utils";
+import {getNumberFromBytes, setNumberToBytes} from "./utils";
 
 export class NodeBinaryMemory implements INode<Uint8Array, Uint8Array> {
     public get isRed(): boolean {
@@ -26,14 +26,16 @@ export class NodeBinaryMemory implements INode<Uint8Array, Uint8Array> {
         // Set `isRed` to `true`
         nodeData.set([1]);
         // Set left child to `null`
-        setOffsetToBytes(
-            nodeData.subarray(1, 1 + nodeOffsetBytes),
+        setNumberToBytes(
+            nodeData,
+            1,
             nodeOffsetBytes,
             numberOfNodes,
         );
         // Set right child to `null`
-        setOffsetToBytes(
-            nodeData.subarray(1 + nodeOffsetBytes, 1 + nodeOffsetBytes * 2),
+        setNumberToBytes(
+            nodeData,
+            1 + nodeOffsetBytes,
             nodeOffsetBytes,
             numberOfNodes,
         );
@@ -92,10 +94,10 @@ export class NodeBinaryMemory implements INode<Uint8Array, Uint8Array> {
 
     public get left(): NodeBinaryMemory | null {
         if (this.leftCache === undefined) {
-            const nodeOffsetBytes = this.nodeOffsetBytes;
-            const offset = getOffsetFromBytes(
-                this.nodeData.subarray(1, 1 + nodeOffsetBytes),
-                nodeOffsetBytes,
+            const offset = getNumberFromBytes(
+                this.nodeData,
+                1,
+                this.nodeOffsetBytes,
             );
 
             this.leftCache = offset === this.numberOfNodes ? null : this.getNode(offset);
@@ -105,13 +107,10 @@ export class NodeBinaryMemory implements INode<Uint8Array, Uint8Array> {
     }
 
     public set left(node: NodeBinaryMemory | null) {
-        const nodeOffsetBytes = this.nodeOffsetBytes;
-        setOffsetToBytes(
-            this.nodeData.subarray(
-                1,
-                1 + nodeOffsetBytes,
-            ),
-            nodeOffsetBytes,
+        setNumberToBytes(
+            this.nodeData,
+            1,
+            this.nodeOffsetBytes,
             node ? node.offset : this.numberOfNodes,
         );
 
@@ -121,11 +120,9 @@ export class NodeBinaryMemory implements INode<Uint8Array, Uint8Array> {
     public get right(): NodeBinaryMemory | null {
         if (this.rightCache === undefined) {
             const nodeOffsetBytes = this.nodeOffsetBytes;
-            const offset = getOffsetFromBytes(
-                this.nodeData.subarray(
-                    1 + nodeOffsetBytes,
-                    1 + nodeOffsetBytes * 2,
-                ),
+            const offset = getNumberFromBytes(
+                this.nodeData,
+                1 + nodeOffsetBytes,
                 nodeOffsetBytes,
             );
 
@@ -137,11 +134,9 @@ export class NodeBinaryMemory implements INode<Uint8Array, Uint8Array> {
 
     public set right(node: NodeBinaryMemory | null) {
         const nodeOffsetBytes = this.nodeOffsetBytes;
-        setOffsetToBytes(
-            this.nodeData.subarray(
-                1 + nodeOffsetBytes,
-                1 + nodeOffsetBytes * 2,
-            ),
+        setNumberToBytes(
+            this.nodeData,
+            1 + nodeOffsetBytes,
             nodeOffsetBytes,
             node ? node.offset : this.numberOfNodes,
         );
