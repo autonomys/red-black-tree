@@ -37,10 +37,10 @@ export class TreeAsync<K, V> {
      *
      * @param targetKey The target for evaluation, e.g. a challenge in the same key space
      *
-     * @return The closest key to the challenge or `null` if no nodes are available
+     * @return [key, value] The closest key to the challenge or `null` if no nodes are available and its value
      */
-    public async getClosestNode(targetKey: K): Promise<K | null> {
-        const result = await this.nodeManager.writeTransaction(() => {
+    public async getClosestNode(targetKey: K): Promise<[K, V] | null> {
+        const result = await this.nodeManager.readTransaction(() => {
             return this.getClosestNodeInternal(targetKey);
         });
         this.nodeManager.cleanup();
@@ -140,7 +140,7 @@ export class TreeAsync<K, V> {
         }
     }
 
-    private async getClosestNodeInternal(targetKey: K): Promise<K | null> {
+    private async getClosestNodeInternal(targetKey: K): Promise<[K, V] | null> {
         const nodeManager = this.nodeManager;
         let currentNode = await nodeManager.getRootAsync();
         if (!currentNode) {
@@ -156,7 +156,7 @@ export class TreeAsync<K, V> {
                         currentNode = left;
                         break;
                     } else {
-                        return key;
+                        return [key, await currentNode.getValueAsync()];
                     }
                 case 1:
                     // TypeScript fails to infer type, so have to specify it explicitly
@@ -165,10 +165,10 @@ export class TreeAsync<K, V> {
                         currentNode = right;
                         break;
                     } else {
-                        return key;
+                        return [key, await currentNode.getValueAsync()];
                     }
                 default:
-                    return key;
+                    return [key, await currentNode.getValueAsync()];
             }
         }
     }

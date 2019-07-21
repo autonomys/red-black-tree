@@ -38,9 +38,9 @@ export class Tree<K, V> {
      *
      * @param targetKey The target for evaluation, e.g. a challenge in the same key space
      *
-     * @return The closest key to the challenge or `null` if no nodes are available
+     * @return [key, value] The closest key to the challenge or `null` if no nodes are available and its value
      */
-    public getClosestNode(targetKey: K): K | null {
+    public getClosestNode(targetKey: K): [K, V] | null {
         const result = this.getClosestNodeInternal(targetKey);
         this.nodeManager.cleanup();
         return result;
@@ -135,7 +135,7 @@ export class Tree<K, V> {
         }
     }
 
-    private getClosestNodeInternal(targetKey: K): K | null {
+    private getClosestNodeInternal(targetKey: K): [K, V] | null {
         const nodeManager = this.nodeManager;
         let currentNode = nodeManager.getRoot();
         if (!currentNode) {
@@ -150,7 +150,7 @@ export class Tree<K, V> {
                         currentNode = left;
                         break;
                     } else {
-                        return key;
+                        return [key, currentNode.getValue()];
                     }
                 case 1:
                     const right = currentNode.getRight();
@@ -158,10 +158,10 @@ export class Tree<K, V> {
                         currentNode = right;
                         break;
                     } else {
-                        return key;
+                        return [key, currentNode.getValue()];
                     }
                 default:
-                    return key;
+                    return [key, currentNode.getValue()];
             }
         }
     }

@@ -13,23 +13,32 @@ test('Search', (t) => {
         tree.addNode(key, null);
     }
 
-    t.same(
-        tree.getClosestNode(1),
-        10,
-        'Non-existing lower end takes closest key',
-    );
+    {
+        const result = tree.getClosestNode(1);
+        t.same(
+            result && result[0],
+            10,
+            'Non-existing lower end takes closest key',
+        );
+    }
 
-    t.same(
-        tree.getClosestNode(255),
-        249,
-        'Non-existing higher end takes closest key',
-    );
+    {
+        const result = tree.getClosestNode(255);
+        t.same(
+            result && result[0],
+            249,
+            'Non-existing higher end takes closest key',
+        );
+    }
 
-    t.same(
-        tree.getClosestNode(128),
-        128,
-        'Existing takes exact key',
-    );
+    {
+        const result = tree.getClosestNode(128);
+        t.same(
+            result && result[0],
+            128,
+            'Existing takes exact key',
+        );
+    }
 
     t.end();
 });
