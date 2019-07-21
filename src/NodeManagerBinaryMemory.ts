@@ -80,14 +80,11 @@ export class NodeManagerBinaryMemory implements INodeManager<Uint8Array, Uint8Ar
         const offset = this.allocateOffsetForAddition();
         const singleNodeAllocationSize = this.singleNodeAllocationSize;
         const nodeOffsetBytes = this.nodeOffsetBytes;
-        const nodeData = this.uint8Array.subarray(
-            nodeOffsetBytes * 3 + singleNodeAllocationSize * offset,
-            nodeOffsetBytes * 3 + singleNodeAllocationSize * (offset + 1),
-        );
         return NodeBinaryMemory.create(
             nodeOffsetBytes,
             this.numberOfNodes,
-            nodeData,
+            this.uint8Array,
+            nodeOffsetBytes * 3 + singleNodeAllocationSize * offset,
             offset,
             key,
             value,
@@ -143,14 +140,11 @@ export class NodeManagerBinaryMemory implements INodeManager<Uint8Array, Uint8Ar
     private getNode(offset: number): NodeBinaryMemory {
         const singleNodeAllocationSize = this.singleNodeAllocationSize;
         const nodeOffsetBytes = this.nodeOffsetBytes;
-        const nodeData = this.uint8Array.subarray(
-            nodeOffsetBytes * 3 + singleNodeAllocationSize * offset,
-            nodeOffsetBytes * 3 + singleNodeAllocationSize * (offset + 1),
-        );
         return NodeBinaryMemory.read(
             nodeOffsetBytes,
             this.numberOfNodes,
-            nodeData,
+            this.uint8Array,
+            nodeOffsetBytes * 3 + singleNodeAllocationSize * offset,
             offset,
             this.keySize,
             this.valueSize,
