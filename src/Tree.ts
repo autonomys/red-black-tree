@@ -50,11 +50,12 @@ export class Tree<K, V> {
         const nodeManager = this.nodeManager;
         const nodeToInsert = nodeManager.addNode(key, value);
 
-        if (!nodeManager.root) {
+        const root = nodeManager.getRoot();
+        if (!root) {
             nodeToInsert.isRed = false;
-            nodeManager.root = nodeToInsert;
+            nodeManager.setRoot(nodeToInsert);
         } else {
-            let currentNode = nodeManager.root;
+            let currentNode = root;
             const path: Array<INode<K, V>> = [];
             while (true) {
                 path.push(currentNode);
@@ -97,13 +98,13 @@ export class Tree<K, V> {
 
     private removeNodeInternal(key: K): void {
         const nodeManager = this.nodeManager;
-        const root = nodeManager.root;
+        const root = nodeManager.getRoot();
 
         if (!root) {
             throw new Error("Tree is empty, nothing to delete");
         }
         if (!root.left && !root.right) {
-            nodeManager.root = null;
+            nodeManager.setRoot(null);
             return;
         }
         let currentNode = root;
@@ -127,7 +128,7 @@ export class Tree<K, V> {
                     }
                 default:
                     if (currentNode === root && !root.left && !root.right) {
-                        nodeManager.root = null;
+                        nodeManager.setRoot(null);
                         return;
                     }
                     this.removeNodeImplementation(path);
@@ -139,7 +140,7 @@ export class Tree<K, V> {
 
     private getClosestNodeInternal(targetKey: K): K | null {
         const nodeManager = this.nodeManager;
-        let currentNode = nodeManager.root;
+        let currentNode = nodeManager.getRoot();
         if (!currentNode) {
             return null;
         }
@@ -189,7 +190,7 @@ export class Tree<K, V> {
             // Here we handle `null` as black `nil` node implicitly, since we do not create `nil` nodes as such
             if (uncle && uncle.isRed) {
                 parent.isRed = !parent.isRed;
-                grandParent.isRed = grandParent === this.nodeManager.root ? false : !grandParent.isRed;
+                grandParent.isRed = grandParent === this.nodeManager.getRoot() ? false : !grandParent.isRed;
                 uncle.isRed = false;
                 path.push(grandParent);
                 continue;
@@ -263,7 +264,7 @@ export class Tree<K, V> {
                 parent.right = originalNode;
             }
         } else {
-            this.nodeManager.root = originalNode;
+            this.nodeManager.setRoot(originalNode);
         }
     }
 
@@ -295,7 +296,7 @@ export class Tree<K, V> {
             if (!replacement) {
                 throw new Error('Deleting root mode, but replacement is null, this should never happen');
             }
-            this.nodeManager.root = replacement;
+            this.nodeManager.setRoot(replacement);
         } else {
             if (parentNode.left === nodeToRemove) {
                 parentNode.left = replacement;

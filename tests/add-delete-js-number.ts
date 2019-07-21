@@ -3,15 +3,16 @@ import * as test from "tape";
 import {INode, NodeManagerJsNumber, Tree} from "../src";
 
 function validateRulesFollowed(t: test.Test, baseMessage: string, nodesManager: NodeManagerJsNumber<null>, expectedNumberOfNodes: number): void {
-    if (nodesManager.root === null) {
+    const root = nodesManager.getRoot();
+    if (root === null) {
         t.equal(expectedNumberOfNodes, 0, `${baseMessage}: Expected number of nodes is correct`);
         return;
     }
 
-    t.ok(!nodesManager.root.isRed, `${baseMessage}: Root is black`);
-    t.equal(expectedNumberOfNodes, getNumberOfNotNullNodes(nodesManager.root), `${baseMessage}: Expected number of nodes is correct`);
-    t.ok(checkOrder(nodesManager.root), `${baseMessage}: Order of nodes is correct`);
-    t.ok(checkHeight(nodesManager.root), `${baseMessage}: Height of sub-trees is correct`);
+    t.ok(!root.isRed, `${baseMessage}: Root is black`);
+    t.equal(expectedNumberOfNodes, getNumberOfNotNullNodes(root), `${baseMessage}: Expected number of nodes is correct`);
+    t.ok(checkOrder(root), `${baseMessage}: Order of nodes is correct`);
+    t.ok(checkHeight(root), `${baseMessage}: Height of sub-trees is correct`);
 }
 
 function checkOrder(node: INode<number, null>): boolean {

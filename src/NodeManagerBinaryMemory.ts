@@ -58,7 +58,7 @@ export class NodeManagerBinaryMemory implements INodeManager<Uint8Array, Uint8Ar
     ) {
     }
 
-    public get root(): NodeBinaryMemory | null {
+    public getRoot(): NodeBinaryMemory | null {
         if (this.rootCache === undefined) {
             const offset = this.getRootNodeOffset();
             this.rootCache = offset === this.numberOfNodes ? null : this.getNode(offset);
@@ -67,7 +67,7 @@ export class NodeManagerBinaryMemory implements INodeManager<Uint8Array, Uint8Ar
         return this.rootCache;
     }
 
-    public set root(node: NodeBinaryMemory | null) {
+    public setRoot(node: NodeBinaryMemory | null): void {
         this.rootCache = node;
         if (node === null) {
             this.setRootNodeOffset(this.numberOfNodes);
