@@ -44,7 +44,7 @@ export class NodeBinaryMemory implements INode<Uint8Array, Uint8Array> {
         // Set value
         source.set(value, sourceOffset + 1 + nodeOffsetBytes * 2 + keySize);
 
-        return new NodeBinaryMemory(
+        const instance = new NodeBinaryMemory(
             offset,
             key,
             value.length,
@@ -54,6 +54,11 @@ export class NodeBinaryMemory implements INode<Uint8Array, Uint8Array> {
             numberOfNodes,
             getNode,
         );
+
+        instance.leftCache = null;
+        instance.rightCache = null;
+
+        return instance;
     }
 
     /**
