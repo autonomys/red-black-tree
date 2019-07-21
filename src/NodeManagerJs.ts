@@ -10,6 +10,7 @@ export abstract class NodeManagerJs<K, V> implements INodeManager<K, V> {
     public getRoot(): NodeJs<K, V> | null {
         return this.root;
     }
+
     public setRoot(root: NodeJs<K, V> | null): void {
         this.root = root;
     }

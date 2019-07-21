@@ -2,6 +2,7 @@ import {INode} from "./INode";
 
 export interface INodeManager<K, V> {
     getRoot(): INode<K, V> | null;
+
     setRoot(root: INode<K, V> | null): void;
 
     addNode(key: K, value: V): INode<K, V>;
