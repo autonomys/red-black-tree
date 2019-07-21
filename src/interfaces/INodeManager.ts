@@ -1,10 +1,7 @@
 import {INode} from "./INode";
+import {INodeManagerBase} from "./INodeManagerBase";
 
-export interface INodeManager<K, V> {
-    getRoot(): INode<K, V> | null;
-
-    setRoot(root: INode<K, V> | null): void;
-
+export interface INodeManager<K, V> extends INodeManagerBase<K, V> {
     addNode(key: K, value: V): INode<K, V>;
 
     compare(aKey: K, bKey: K): -1 | 0 | 1;

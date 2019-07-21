@@ -1,7 +1,10 @@
 export {Tree} from "./Tree";
 
 export {INode} from "./interfaces/INode";
+export {INodeAsync} from "./interfaces/INodeAsync";
+export {INodeManagerBase} from "./interfaces/INodeManagerBase";
 export {INodeManager} from "./interfaces/INodeManager";
+export {INodeManagerAsync} from "./interfaces/INodeManagerAsync";
 
 export {NodeJs} from "./implementations/js/NodeJs";
 export {NodeManagerJs} from "./implementations/js/NodeManagerJs";

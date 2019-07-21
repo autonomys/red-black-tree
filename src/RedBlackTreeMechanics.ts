@@ -1,5 +1,5 @@
 import {INode} from "./interfaces/INode";
-import {INodeManager} from "./interfaces/INodeManager";
+import {INodeManagerBase} from "./interfaces/INodeManagerBase";
 import {RuntimeError} from "./RuntimeError";
 
 function isNullOrBlack<K, V>(node: INode<K, V> | null): boolean {
@@ -13,7 +13,7 @@ function isRed<K, V>(node: INode<K, V> | null): boolean {
     return Boolean(node && node.getIsRed());
 }
 
-export function fixTree<K, V>(nodeManager: INodeManager<K, V>, path: Array<INode<K, V>>): void {
+export function fixTree<K, V>(nodeManager: INodeManagerBase<K, V>, path: Array<INode<K, V>>): void {
     while (path.length) {
         const targetNode = path.pop();
         if (!targetNode) {
@@ -80,7 +80,7 @@ export function fixTree<K, V>(nodeManager: INodeManager<K, V>, path: Array<INode
  * @param rotationNode
  * @param parent       `null` if `rotationNode` is root
  */
-function rotateLeft<K, V>(nodeManager: INodeManager<K, V>, rotationNode: INode<K, V>, parent: INode<K, V> | null): void {
+function rotateLeft<K, V>(nodeManager: INodeManagerBase<K, V>, rotationNode: INode<K, V>, parent: INode<K, V> | null): void {
     const originalRightNode = rotationNode.getRight();
     if (!originalRightNode) {
         throw new RuntimeError('Right children of rotation node is null, this should never happen');
@@ -96,7 +96,7 @@ function rotateLeft<K, V>(nodeManager: INodeManager<K, V>, rotationNode: INode<K
  * @param rotationNode
  * @param parent       `null` if `rotationNode` is root
  */
-function rotateRight<K, V>(nodeManager: INodeManager<K, V>, rotationNode: INode<K, V>, parent: INode<K, V> | null): void {
+function rotateRight<K, V>(nodeManager: INodeManagerBase<K, V>, rotationNode: INode<K, V>, parent: INode<K, V> | null): void {
     const originalLeftNode = rotationNode.getLeft();
     if (!originalLeftNode) {
         throw new RuntimeError('Left children of rotation node is null, this should never happen');
@@ -107,7 +107,7 @@ function rotateRight<K, V>(nodeManager: INodeManager<K, V>, rotationNode: INode<
     rotateFixParentConnection(nodeManager, rotationNode, originalLeftNode, parent);
 }
 
-function rotateFixParentConnection<K, V>(nodeManager: INodeManager<K, V>, rotationNode: INode<K, V>, originalNode: INode<K, V>, parent: INode<K, V> | null): void {
+function rotateFixParentConnection<K, V>(nodeManager: INodeManagerBase<K, V>, rotationNode: INode<K, V>, originalNode: INode<K, V>, parent: INode<K, V> | null): void {
     if (parent) {
         if (parent.getLeft() === rotationNode) {
             parent.setLeft(originalNode);
@@ -119,7 +119,7 @@ function rotateFixParentConnection<K, V>(nodeManager: INodeManager<K, V>, rotati
     }
 }
 
-export function removeNodeImplementation<K, V>(nodeManager: INodeManager<K, V>, path: Array<INode<K, V>>): void {
+export function removeNodeImplementation<K, V>(nodeManager: INodeManagerBase<K, V>, path: Array<INode<K, V>>): void {
     const nodeToRemove = path.pop() as INode<K, V>;
     const parentNode = path.pop() || null;
     const xPath = path.slice();
@@ -256,7 +256,7 @@ function determineXAndReplacement<K, V>(
     ];
 }
 
-function handleRemovalCases<K, V>(nodeManager: INodeManager<K, V>, x: INode<K, V> | null, xParent: INode<K, V> | null, xPath: Array<INode<K, V>>): void {
+function handleRemovalCases<K, V>(nodeManager: INodeManagerBase<K, V>, x: INode<K, V> | null, xParent: INode<K, V> | null, xPath: Array<INode<K, V>>): void {
     while (true) {
         if (!xParent) {
             return;
