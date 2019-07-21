@@ -1,4 +1,4 @@
-import {INode} from "./INode";
+import {INode} from "../..";
 
 export class NodeJs<K, V> implements INode<K, V> {
     private isRed: boolean = true;

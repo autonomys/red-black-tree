@@ -1,5 +1,5 @@
-import {INode} from "./INode";
-import {INodeManager} from "./INodeManager";
+import {INode} from "./interfaces/INode";
+import {INodeManager} from "./interfaces/INodeManager";
 import {RuntimeError} from "./RuntimeError";
 
 function isNullOrBlack<K, V>(node: INode<K, V> | null): boolean {

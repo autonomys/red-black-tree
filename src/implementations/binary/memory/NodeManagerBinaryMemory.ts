@@ -1,7 +1,7 @@
-import {INodeManager} from "./INodeManager";
+import {INodeManager} from "../../..";
+import {RuntimeError} from "../../../RuntimeError";
+import {compareUint8Array, getNumberFromBytes, maxNumberToBytes, setNumberToBytes} from "../../../utils";
 import {NodeBinaryMemory} from "./NodeBinaryMemory";
-import {RuntimeError} from "./RuntimeError";
-import {compareUint8Array, getNumberFromBytes, maxNumberToBytes, setNumberToBytes} from "./utils";
 
 /**
  * Node manager implementation that can work with any data type supported in Node.js as a value

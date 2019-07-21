@@ -1,5 +1,5 @@
-import {INode} from "./INode";
-import {getNumberFromBytes, setNumberToBytes} from "./utils";
+import {INode} from "../../..";
+import {getNumberFromBytes, setNumberToBytes} from "../../../utils";
 
 export class NodeBinaryMemory implements INode<Uint8Array, Uint8Array> {
     /**

@@ -1,4 +1,4 @@
-import {INodeManager} from "./INodeManager";
+import {INodeManager} from "../..";
 import {NodeJs} from "./NodeJs";
 
 /**
