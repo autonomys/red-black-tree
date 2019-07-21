@@ -2,6 +2,7 @@ import * as fs from "fs";
 import {RuntimeError} from "../../../RuntimeError";
 import {compareUint8Array, maxNumberToBytes} from "../../../utils";
 import {NodeManagerAsyncGeneric} from "../../NodeManagerAsyncGeneric";
+import {File} from "./File";
 import {NodeBinaryDisk} from "./NodeBinaryDisk";
 import {getNumberFromFileBytes, setNumberToFileBytes} from "./utils";
 
@@ -10,7 +11,7 @@ async function allocateEmptyFile(path: string, size: number, chunkSize: number):
     let written = 0;
     const emptyPiece = Buffer.alloc(chunkSize);
     while (written < size) {
-        await fileHandle.write(emptyPiece);
+        await fileHandle.write(emptyPiece.slice(0, Math.min(chunkSize, size - written)));
         written += chunkSize;
     }
     await fileHandle.close();
@@ -75,7 +76,7 @@ export class NodeManagerBinaryDisk extends NodeManagerAsyncGeneric<Uint8Array, U
         if (storageSize !== allocationSize) {
             throw new Error(`Actual storage size of ${storageSize} bytes doesn't match expected allocation size of ${allocationSize} bytes`);
         }
-        const storageData = await fs.promises.open(pathToFile, 'r+');
+        const storageData = await File.open(pathToFile);
 
         return new NodeManagerBinaryDisk(
             storageData,
@@ -92,7 +93,7 @@ export class NodeManagerBinaryDisk extends NodeManagerAsyncGeneric<Uint8Array, U
     private rootCache: NodeBinaryDisk | null | undefined = undefined;
 
     private constructor(
-        private readonly storageData: fs.promises.FileHandle,
+        private readonly storageData: File,
         private readonly numberOfNodes: number,
         private readonly nodeOffsetBytes: number,
         private readonly keySize: number,
