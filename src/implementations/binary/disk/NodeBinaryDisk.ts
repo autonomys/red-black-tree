@@ -51,7 +51,7 @@ export class NodeBinaryDisk implements INodeAsync<Uint8Array, Uint8Array> {
 
         await source.write(sourceOffset, nodeData);
 
-        return new NodeBinaryDisk(
+        const instance = new NodeBinaryDisk(
             offset,
             true,
             key,
@@ -62,6 +62,11 @@ export class NodeBinaryDisk implements INodeAsync<Uint8Array, Uint8Array> {
             numberOfNodes,
             getNode,
         );
+
+        instance.leftCache = null;
+        instance.rightCache = null;
+
+        return instance;
     }
 
     /**

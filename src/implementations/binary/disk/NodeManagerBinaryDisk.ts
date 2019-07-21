@@ -166,6 +166,10 @@ export class NodeManagerBinaryDisk extends NodeManagerAsyncGeneric<Uint8Array, U
         this.rootCache = undefined;
     }
 
+    public close(): Promise<void> {
+        return this.storageData.close();
+    }
+
     private async allocateOffsetForAddition(): Promise<number> {
         const numberOfNodes = this.numberOfNodes;
         const nodeOffsetBytes = this.nodeOffsetBytes;

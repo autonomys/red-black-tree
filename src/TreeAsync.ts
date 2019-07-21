@@ -109,6 +109,8 @@ export class TreeAsync<K, V> {
         const path: Array<INode<K, V>> = [];
         while (true) {
             path.push(currentNode);
+            // Force reading both children, we may need them during tree fixing process and unless they are in cache, `getLeft()` and `getRight()` methods
+            // will fail for `INodeAsync`
             const left = await currentNode.getLeftAsync();
             const right = await currentNode.getRightAsync();
             switch (nodeManager.compare(key, currentNode.getKey())) {
