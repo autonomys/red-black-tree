@@ -101,14 +101,6 @@ export class Tree<K, V> {
         }
     }
 
-    // /**
-    //  * Add nodes to tree as a batch, should pre-sort and add in desired order for efficiency
-    //  *
-    //  * @param keySet A set unique keys to be indexed in the tree
-    //  */
-    // public addNodeSet(keySet: Uint8Array[]) {
-    // }
-
     private removeNodeInternal(key: K): void {
         const nodeManager = this.nodeManager;
         const root = nodeManager.getRoot();
@@ -288,22 +280,6 @@ export class Tree<K, V> {
             this.nodeManager.setRoot(originalNode);
         }
     }
-
-    // /**
-    //  * Save the current in-memory Tree to disk
-    //  *
-    //  * @param path The location on disk for storage. Should be cross-platform.
-    //  */
-    // public save(path: string) {
-    // }
-    //
-    // /**
-    //  * Read an existing tree from disk into memory.
-    //  *
-    //  * @param path The location where the tree is saved to disk. Should be cross-platform
-    //  */
-    // public open(path: string): Tree {
-    // }
 
     private removeNodeImplementation(path: Array<INode<K, V>>): void {
         const nodeToRemove = path.pop() as INode<K, V>;
