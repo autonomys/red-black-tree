@@ -22,4 +22,18 @@ export interface INodeAsync<K, V> extends INode<K, V> {
      * Value associated with node
      */
     getValueAsync(): Promise<V>;
+
+    /**
+     * Left children
+     */
+    getLeft(): INodeAsync<K, V> | null;
+
+    setLeft(node: INodeAsync<K, V> | null): void;
+
+    /**
+     * Right children
+     */
+    getRight(): INodeAsync<K, V> | null;
+
+    setRight(node: INodeAsync<K, V> | null): void;
 }

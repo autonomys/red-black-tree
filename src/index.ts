@@ -1,4 +1,5 @@
 export {Tree} from "./Tree";
+export {TreeAsync} from "./TreeAsync";
 
 export {INode} from "./interfaces/INode";
 export {INodeAsync} from "./interfaces/INodeAsync";

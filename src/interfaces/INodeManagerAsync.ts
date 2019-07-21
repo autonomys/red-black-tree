@@ -40,4 +40,8 @@ export interface INodeManagerAsync<K, V> extends INodeManagerBase<K, V> {
      * Clean temporary caches that may be needed for node manager to work properly and/or efficiently
      */
     cleanup(): void;
+
+    getRoot(): INodeAsync<K, V> | null;
+
+    setRoot(root: INodeAsync<K, V> | null): void;
 }
