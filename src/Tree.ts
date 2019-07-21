@@ -15,7 +15,7 @@ export class Tree<K, V> {
     /**
      * Add nodes to a tree one by one (for incremental updates)
      *
-     * @param key  A key to be indexed, e.g. a 32 byte piece id
+     * @param key
      * @param value Value to be associated with a key
      */
     public addNode(key: K, value: V): void {
@@ -26,7 +26,7 @@ export class Tree<K, V> {
     /**
      * Remove a node from the tree
      *
-     * @param key A key to be removed, e.g. a 32 byte piece id
+     * @param key
      */
     public removeNode(key: K): void {
         this.removeNodeInternal(key);
@@ -34,9 +34,9 @@ export class Tree<K, V> {
     }
 
     /**
-     * Get the closest node/key in a tree to a given target in the same key space
+     * Get the closest node key/value in a tree to a given target key
      *
-     * @param targetKey The target for evaluation, e.g. a challenge in the same key space
+     * @param targetKey
      *
      * @return [key, value] The closest key to the challenge or `null` if no nodes are available and its value
      */
@@ -165,5 +165,4 @@ export class Tree<K, V> {
             }
         }
     }
-
 }
