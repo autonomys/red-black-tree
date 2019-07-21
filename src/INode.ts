@@ -2,21 +2,24 @@ export interface INode<K, V> {
     /**
      * Whether node is red
      */
-    isRed: boolean;
+    getIsRed(): boolean;
+    setIsRed(isRed: boolean): void;
     /**
      * Node key
      */
-    key: K;
+    getKey(): K;
     /**
      * Left children
      */
-    left: INode<K, V> | null;
+    getLeft(): INode<K, V> | null;
+    setLeft(node: INode<K, V> | null): void;
     /**
      * Right children
      */
-    right: INode<K, V> | null;
+    getRight(): INode<K, V> | null;
+    setRight(node: INode<K, V> | null): void;
     /**
      * Value associated with node
      */
-    value: V;
+    getValue(): V;
 }

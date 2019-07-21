@@ -2,6 +2,17 @@ import {INode} from "./INode";
 import {INodeManager} from "./INodeManager";
 import {RuntimeError} from "./RuntimeError";
 
+function isNullOrBlack<K, V>(node: INode<K, V> | null): boolean {
+    return (
+        !node ||
+        !node.getIsRed()
+    );
+}
+
+function isRed<K, V>(node: INode<K, V> | null): boolean {
+    return Boolean(node && node.getIsRed());
+}
+
 /**
  * Resources used to write this:
  * * https://www.youtube.com/playlist?list=PL9xmBV_5YoZNqDI8qfOZgzbqahCUmUEin
@@ -52,30 +63,32 @@ export class Tree<K, V> {
 
         const root = nodeManager.getRoot();
         if (!root) {
-            nodeToInsert.isRed = false;
+            nodeToInsert.setIsRed(false);
             nodeManager.setRoot(nodeToInsert);
         } else {
             let currentNode = root;
             const path: Array<INode<K, V>> = [];
             while (true) {
                 path.push(currentNode);
-                switch (nodeManager.compare(nodeToInsert.key, currentNode.key)) {
+                switch (nodeManager.compare(nodeToInsert.getKey(), currentNode.getKey())) {
                     case -1:
-                        if (currentNode.left) {
-                            currentNode = currentNode.left;
+                        const left = currentNode.getLeft();
+                        if (left) {
+                            currentNode = left;
                             break;
                         } else {
-                            currentNode.left = nodeToInsert;
+                            currentNode.setLeft(nodeToInsert);
                             path.push(nodeToInsert);
                             this.fixTree(path);
                             return;
                         }
                     case 1:
-                        if (currentNode.right) {
-                            currentNode = currentNode.right;
+                        const right = currentNode.getRight();
+                        if (right) {
+                            currentNode = right;
                             break;
                         } else {
-                            currentNode.right = nodeToInsert;
+                            currentNode.setRight(nodeToInsert);
                             path.push(nodeToInsert);
                             this.fixTree(path);
                             return;
@@ -103,7 +116,7 @@ export class Tree<K, V> {
         if (!root) {
             throw new Error("Tree is empty, nothing to delete");
         }
-        if (!root.left && !root.right) {
+        if (!root.getLeft() && !root.getRight()) {
             nodeManager.setRoot(null);
             return;
         }
@@ -111,23 +124,25 @@ export class Tree<K, V> {
         const path: Array<INode<K, V>> = [];
         while (true) {
             path.push(currentNode);
-            switch (nodeManager.compare(key, currentNode.key)) {
+            switch (nodeManager.compare(key, currentNode.getKey())) {
                 case -1:
-                    if (currentNode.left) {
-                        currentNode = currentNode.left;
+                    const left = currentNode.getLeft();
+                    if (left) {
+                        currentNode = left;
                         break;
                     } else {
                         throw new Error("Can't delete a key, it doesn't exist");
                     }
                 case 1:
-                    if (currentNode.right) {
-                        currentNode = currentNode.right;
+                    const right = currentNode.getRight();
+                    if (right) {
+                        currentNode = right;
                         break;
                     } else {
                         throw new Error("Can't delete a key, it doesn't exist");
                     }
                 default:
-                    if (currentNode === root && !root.left && !root.right) {
+                    if (currentNode === root && !root.getLeft() && !root.getRight()) {
                         nodeManager.setRoot(null);
                         return;
                     }
@@ -145,23 +160,25 @@ export class Tree<K, V> {
             return null;
         }
         while (true) {
-            switch (nodeManager.compare(targetKey, currentNode.key)) {
+            switch (nodeManager.compare(targetKey, currentNode.getKey())) {
                 case -1:
-                    if (currentNode.left) {
-                        currentNode = currentNode.left;
+                    const left = currentNode.getLeft();
+                    if (left) {
+                        currentNode = left;
                         break;
                     } else {
-                        return currentNode.key;
+                        return currentNode.getKey();
                     }
                 case 1:
-                    if (currentNode.right) {
-                        currentNode = currentNode.right;
+                    const right = currentNode.getRight();
+                    if (right) {
+                        currentNode = right;
                         break;
                     } else {
-                        return currentNode.key;
+                        return currentNode.getKey();
                     }
                 default:
-                    return currentNode.key;
+                    return currentNode.getKey();
             }
         }
     }
@@ -178,35 +195,35 @@ export class Tree<K, V> {
                 return;
             }
             // No conflict, nothing left to do
-            if (!parent.isRed) {
+            if (!parent.getIsRed()) {
                 return;
             }
             const grandParent = path.pop();
             if (!grandParent) {
-                parent.isRed = false;
+                parent.setIsRed(false);
                 return;
             }
-            const uncle = grandParent.left === parent ? grandParent.right : grandParent.left;
+            const uncle = grandParent.getLeft() === parent ? grandParent.getRight() : grandParent.getLeft();
             // Here we handle `null` as black `nil` node implicitly, since we do not create `nil` nodes as such
-            if (uncle && uncle.isRed) {
-                parent.isRed = !parent.isRed;
-                grandParent.isRed = grandParent === this.nodeManager.getRoot() ? false : !grandParent.isRed;
-                uncle.isRed = false;
+            if (uncle && uncle.getIsRed()) {
+                parent.setIsRed(!parent.getIsRed());
+                grandParent.setIsRed(grandParent === this.nodeManager.getRoot() ? false : !grandParent.getIsRed());
+                uncle.setIsRed(false);
                 path.push(grandParent);
                 continue;
             }
 
             // Triangle cases
             if (
-                parent.left === targetNode &&
-                grandParent.right === parent
+                parent.getLeft() === targetNode &&
+                grandParent.getRight() === parent
             ) {
                 this.rotateRight(parent, grandParent);
                 path.push(grandParent, targetNode, parent);
                 continue;
             } else if (
-                parent.right === targetNode &&
-                grandParent.left === parent
+                parent.getRight() === targetNode &&
+                grandParent.getLeft() === parent
             ) {
                 this.rotateLeft(parent, grandParent);
                 path.push(grandParent, targetNode, parent);
@@ -215,13 +232,13 @@ export class Tree<K, V> {
 
             const grandGrandParent = path.pop() || null;
             // Line cases
-            if (parent.left === targetNode) {
+            if (parent.getLeft() === targetNode) {
                 this.rotateRight(grandParent, grandGrandParent);
             } else {
                 this.rotateLeft(grandParent, grandGrandParent);
             }
-            parent.isRed = !parent.isRed;
-            grandParent.isRed = !grandParent.isRed;
+            parent.setIsRed(!parent.getIsRed());
+            grandParent.setIsRed(!grandParent.getIsRed());
             break;
         }
     }
@@ -231,12 +248,12 @@ export class Tree<K, V> {
      * @param parent       `null` if `rotationNode` is root
      */
     private rotateLeft(rotationNode: INode<K, V>, parent: INode<K, V> | null): void {
-        const originalRightNode = rotationNode.right;
+        const originalRightNode = rotationNode.getRight();
         if (!originalRightNode) {
             throw new RuntimeError('Right children of rotation node is null, this should never happen');
         }
-        rotationNode.right = originalRightNode.left;
-        originalRightNode.left = rotationNode;
+        rotationNode.setRight(originalRightNode.getLeft());
+        originalRightNode.setLeft(rotationNode);
 
         this.rotateFixParentConnection(rotationNode, originalRightNode, parent);
     }
@@ -246,22 +263,22 @@ export class Tree<K, V> {
      * @param parent       `null` if `rotationNode` is root
      */
     private rotateRight(rotationNode: INode<K, V>, parent: INode<K, V> | null): void {
-        const originalLeftNode = rotationNode.left;
+        const originalLeftNode = rotationNode.getLeft();
         if (!originalLeftNode) {
             throw new RuntimeError('Left children of rotation node is null, this should never happen');
         }
-        rotationNode.left = originalLeftNode.right;
-        originalLeftNode.right = rotationNode;
+        rotationNode.setLeft(originalLeftNode.getRight());
+        originalLeftNode.setRight(rotationNode);
 
         this.rotateFixParentConnection(rotationNode, originalLeftNode, parent);
     }
 
     private rotateFixParentConnection(rotationNode: INode<K, V>, originalNode: INode<K, V>, parent: INode<K, V> | null): void {
         if (parent) {
-            if (parent.left === rotationNode) {
-                parent.left = originalNode;
+            if (parent.getLeft() === rotationNode) {
+                parent.setLeft(originalNode);
             } else {
-                parent.right = originalNode;
+                parent.setRight(originalNode);
             }
         } else {
             this.nodeManager.setRoot(originalNode);
@@ -298,67 +315,67 @@ export class Tree<K, V> {
             }
             this.nodeManager.setRoot(replacement);
         } else {
-            if (parentNode.left === nodeToRemove) {
-                parentNode.left = replacement;
+            if (parentNode.getLeft() === nodeToRemove) {
+                parentNode.setLeft(replacement);
             } else {
-                parentNode.right = replacement;
+                parentNode.setRight(replacement);
             }
         }
 
         if (replacement) {
-            if (nodeToRemove.right === replacement) {
-                replacement.left = nodeToRemove.left;
+            if (nodeToRemove.getRight() === replacement) {
+                replacement.setLeft(nodeToRemove.getLeft());
                 if (replacement !== x) {
-                    replacement.right = x;
+                    replacement.setRight(x);
                     replacementParent = replacement;
                     xPath.pop();
                 }
-            } else if (nodeToRemove.left === replacement) {
-                replacement.right = nodeToRemove.right;
+            } else if (nodeToRemove.getLeft() === replacement) {
+                replacement.setRight(nodeToRemove.getRight());
                 if (replacement !== x) {
-                    replacement.left = x;
+                    replacement.setLeft(x);
                     replacementParent = replacement;
                     xPath.pop();
                 }
             } else {
-                replacement.left = nodeToRemove.left;
-                replacement.right = nodeToRemove.right;
+                replacement.setLeft(nodeToRemove.getLeft());
+                replacement.setRight(nodeToRemove.getRight());
                 if (replacementParent) {
-                    if (replacementParent.left === replacement) {
-                        replacementParent.left = x;
+                    if (replacementParent.getLeft() === replacement) {
+                        replacementParent.setLeft(x);
                     } else {
-                        replacementParent.right = x;
+                        replacementParent.setRight(x);
                     }
                 }
             }
         }
 
         if (
-            nodeToRemove.isRed &&
+            nodeToRemove.getIsRed() &&
             (
                 !replacement ||
-                replacement.isRed
+                replacement.getIsRed()
             )
         ) {
             return;
         }
 
         if (
-            nodeToRemove.isRed &&
+            nodeToRemove.getIsRed() &&
             replacement &&
-            !replacement.isRed
+            !replacement.getIsRed()
         ) {
-            replacement.isRed = true;
+            replacement.setIsRed(true);
             this.handleRemovalCases(x, replacementParent, xPath);
             return;
         }
 
         if (
-            !nodeToRemove.isRed &&
+            !nodeToRemove.getIsRed() &&
             replacement &&
-            replacement.isRed
+            replacement.getIsRed()
         ) {
-            replacement.isRed = false;
+            replacement.setIsRed(false);
             return;
         }
 
@@ -382,32 +399,36 @@ export class Tree<K, V> {
         INode<K, V> | null,
         boolean
     ] {
-        if (!nodeToRemove.left || !nodeToRemove.right) {
-            const replacement = nodeToRemove.left || nodeToRemove.right;
+        const nodeToRemoveLeft = nodeToRemove.getLeft();
+        const nodeToRemoveRight = nodeToRemove.getRight();
+        if (!nodeToRemoveLeft || !nodeToRemoveRight) {
+            const replacement = nodeToRemoveLeft || nodeToRemoveRight;
             return [
                 replacement,
                 replacement,
                 replacement ? nodeToRemove : nodeToRemoveParent,
-                Boolean(nodeToRemove.left),
+                Boolean(nodeToRemoveLeft),
             ];
         }
 
-        let replacement = nodeToRemove.right;
+        let replacement = nodeToRemoveRight;
         let replacementParent = nodeToRemove;
         if (nodeToRemoveParent) {
             xPath.push(nodeToRemoveParent);
         }
         const xPathExtra: Array<INode<K, V>> = [];
-        while (replacement.left) {
+        let left: INode<K, V> | null = replacement.getLeft();
+        while (left) {
             replacementParent = replacement;
-            replacement = replacement.left;
+            replacement = left;
             xPathExtra.push(replacementParent);
+            left = replacement.getLeft();
         }
         xPathExtra.pop();
         xPath.push(replacement, ...xPathExtra);
 
         return [
-            replacement.right,
+            replacement.getRight(),
             replacement,
             replacementParent,
             false,
@@ -419,73 +440,67 @@ export class Tree<K, V> {
             if (!xParent) {
                 return;
             }
-            if (!xParent.left && !xParent.right) {
-                xParent.isRed = false;
+            if (!xParent.getLeft() && !xParent.getRight()) {
+                xParent.setIsRed(false);
                 return;
             }
 
             // Case 0
-            if (x && x.isRed) {
-                x.isRed = false;
+            if (x && x.getIsRed()) {
+                x.setIsRed(false);
                 return;
             }
 
-            let w = xParent.left === x ? xParent.right : xParent.left;
+            let w = xParent.getLeft() === x ? xParent.getRight() : xParent.getLeft();
 
             // Case 1
             if (
                 (
                     !x ||
-                    !x.isRed
+                    !x.getIsRed()
                 ) &&
                 (
                     w &&
-                    w.isRed
+                    w.getIsRed()
                 )
             ) {
-                w.isRed = false;
-                xParent.isRed = true;
+                w.setIsRed(false);
+                xParent.setIsRed(true);
                 const xParentParent = xPath.pop() || null;
-                if (xParent.left === x) {
+                if (xParent.getLeft() === x) {
                     this.rotateLeft(xParent, xParentParent);
                 } else {
                     this.rotateRight(xParent, xParentParent);
                 }
                 xPath.push(w);
 
-                w = xParent.left === x ? xParent.right : xParent.left;
+                w = xParent.getLeft() === x ? xParent.getRight() : xParent.getLeft();
             }
 
             // Case 2
             if (
                 (
                     !x ||
-                    !x.isRed
+                    !x.getIsRed()
                 ) &&
                 w &&
-                !w.isRed &&
+                !w.getIsRed() &&
                 (
-                    (
-                        !w.left ||
-                        !w.left.isRed
-                    ) &&
-                    (
-                        !w.right ||
-                        !w.right.isRed
-                    )
+                    isNullOrBlack(w.getLeft()) &&
+                    isNullOrBlack(w.getRight())
                 )
             ) {
-                w.isRed = true;
+                w.setIsRed(true);
                 x = xParent;
-                if (x.isRed) {
-                    x.isRed = false;
+                if (x.getIsRed()) {
+                    x.setIsRed(false);
                     return;
                 } else {
                     xParent = xPath.pop() as INode<K, V>;
                     if (!xParent) {
                         return;
                     }
-                    w = xParent.left === x ? xParent.right : xParent.left;
+                    w = xParent.getLeft() === x ? xParent.getRight() : xParent.getLeft();
                     continue;
                 }
             }
@@ -494,81 +509,75 @@ export class Tree<K, V> {
             if (
                 (
                     !x ||
-                    !x.isRed
+                    !x.getIsRed()
                 ) &&
                 w &&
-                !w.isRed &&
+                !w.getIsRed() &&
                 (
                     (
-                        xParent.left === x &&
-                        w.left &&
-                        w.left.isRed &&
-                        (
-                            !w.right ||
-                            !w.right.isRed
-                        )
+                        xParent.getLeft() === x &&
+                        isRed(w.getLeft()) &&
+                        isNullOrBlack(w.getRight())
                     ) ||
                     (
-                        xParent.right === x &&
-                        w.right &&
-                        w.right.isRed &&
-                        (
-                            !w.left ||
-                            !w.left.isRed
-                        )
+                        xParent.getRight() === x &&
+                        isRed(w.getRight()) &&
+                        isNullOrBlack(w.getLeft())
                     )
                 )
             ) {
-                if (xParent.left === x) {
-                    if (w.left) {
-                        w.left.isRed = false;
+                if (xParent.getLeft() === x) {
+                    const left = w.getLeft();
+                    if (left) {
+                        left.setIsRed(false);
                     }
-                } else if (xParent.right === x) {
-                    if (w.right) {
-                        w.right.isRed = false;
+                } else if (xParent.getRight() === x) {
+                    const right = w.getRight();
+                    if (right) {
+                        right.setIsRed(false);
                     }
                 }
-                w.isRed = true;
-                if (xParent.left === x) {
+                w.setIsRed(true);
+                if (xParent.getLeft() === x) {
                     this.rotateRight(w, xParent);
                 } else {
                     this.rotateLeft(w, xParent);
                 }
-                w = xParent.left === x ? xParent.right : xParent.left;
+                w = xParent.getLeft() === x ? xParent.getRight() : xParent.getLeft();
             }
 
             // Case 4
             if (
                 (
                     !x ||
-                    !x.isRed
+                    !x.getIsRed()
                 ) &&
                 w &&
-                !w.isRed &&
+                !w.getIsRed() &&
                 (
                     (
-                        xParent.left === x &&
-                        w.right &&
-                        w.right.isRed
+                        xParent.getLeft() === x &&
+                        isRed(w.getRight())
                     ) ||
                     (
-                        xParent.right === x &&
-                        w.left &&
-                        w.left.isRed
+                        xParent.getRight() === x &&
+                        isRed(w.getLeft())
                     )
                 )
             ) {
-                w.isRed = xParent.isRed;
-                xParent.isRed = false;
+                w.setIsRed(xParent.getIsRed());
+                xParent.setIsRed(false);
                 const xParentParent = xPath.pop() || null;
-                if (xParent.left === x) {
-                    if (w.right) {
-                        w.right.isRed = false;
+                if (xParent.getLeft() === x) {
+                    const right = w.getRight();
+                    if (right) {
+                        right.setIsRed(false);
                     }
                     this.rotateLeft(xParent, xParentParent);
-                } else if (xParent.right === x) {
-                    if (w.left) {
-                        w.left.isRed = false;
+                } else if (xParent.getRight() === x) {
+                    const left = w.getLeft();
+                    if (left) {
+                        left.setIsRed(false);
                     }
                     this.rotateRight(xParent, xParentParent);
                 }

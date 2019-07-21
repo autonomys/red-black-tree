@@ -9,38 +9,40 @@ function validateRulesFollowed(t: test.Test, baseMessage: string, nodesManager: 
         return;
     }
 
-    t.ok(!root.isRed, `${baseMessage}: Root is black`);
+    t.ok(!root.getIsRed(), `${baseMessage}: Root is black`);
     t.equal(expectedNumberOfNodes, getNumberOfNotNullNodes(root), `${baseMessage}: Expected number of nodes is correct`);
     t.ok(checkOrder(root), `${baseMessage}: Order of nodes is correct`);
     t.ok(checkHeight(root), `${baseMessage}: Height of sub-trees is correct`);
 }
 
 function checkOrder(node: INode<number, null>): boolean {
-    if (!node.isRed) {
+    const left = node.getLeft();
+    const right = node.getRight();
+    if (!node.getIsRed()) {
         return (
             (
-                !node.left ||
-                checkOrder(node.left)
+                !left ||
+                checkOrder(left)
             ) &&
             (
-                !node.right ||
-                checkOrder(node.right)
+                !right ||
+                checkOrder(right)
             )
         );
     }
     return (
         (
-            !node.left ||
+            !left ||
             (
-                !node.left.isRed &&
-                checkOrder(node.left)
+                !left.getIsRed() &&
+                checkOrder(left)
             )
         ) &&
         (
-            !node.right ||
+            !right ||
             (
-                !node.right.isRed &&
-                checkOrder(node.right)
+                !right.getIsRed() &&
+                checkOrder(right)
             )
         )
     );
@@ -54,12 +56,12 @@ function getHeight(node: INode<number, null> | null): number | false {
     if (!node) {
         return 1;
     }
-    const leftHeight = getHeight(node.left);
-    const rightHeight = getHeight(node.right);
+    const leftHeight = getHeight(node.getLeft());
+    const rightHeight = getHeight(node.getRight());
     if (leftHeight !== rightHeight || leftHeight === false) {
         return false;
     }
-    return (node.isRed ? 0 : 1) + leftHeight;
+    return (node.getIsRed() ? 0 : 1) + leftHeight;
 }
 
 function getNumberOfNotNullNodes(node: INode<number, null> | null): number {
@@ -67,7 +69,7 @@ function getNumberOfNotNullNodes(node: INode<number, null> | null): number {
         return 0;
     }
 
-    return 1 + getNumberOfNotNullNodes(node.left) + getNumberOfNotNullNodes(node.right);
+    return 1 + getNumberOfNotNullNodes(node.getLeft()) + getNumberOfNotNullNodes(node.getRight());
 }
 
 test('Basic test', (t) => {
