@@ -1,5 +1,4 @@
-import {INodeAsync} from "../interfaces/INodeAsync";
-import {INodeManagerAsync} from "../interfaces/INodeManagerAsync";
+import {INodeAsync, INodeManagerAsync} from "..";
 
 /**
  * Generic implementation that has useful `readTransaction()` and `writeTransaction()` methods
@@ -26,15 +25,15 @@ export abstract class NodeManagerAsyncGeneric<K, V> implements INodeManagerAsync
 
     public abstract getRootAsync(): Promise<INodeAsync<K, V> | null>;
 
+    public abstract addNodeAsync(key: K, value: V): Promise<INodeAsync<K, V>>;
+
+    public abstract removeNodeAsync(node: INodeAsync<K, V>): Promise<void>;
+
     public abstract getRoot(): INodeAsync<K, V> | null;
 
     public abstract setRoot(root: INodeAsync<K, V> | null): void;
 
-    public abstract addNode(key: K, value: V): INodeAsync<K, V>;
-
     public abstract compare(aKey: K, bKey: K): -1 | 0 | 1;
-
-    public abstract removeNode(node: INodeAsync<K, V>): void;
 
     public abstract cleanup(): void;
 }
