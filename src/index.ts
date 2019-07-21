@@ -13,5 +13,8 @@ export {NodeManagerJsNumber} from "./implementations/js/NodeManagerJsNumber";
 export {NodeManagerJsString} from "./implementations/js/NodeManagerJsString";
 export {NodeManagerJsUint8Array} from "./implementations/js/NodeManagerJsUint8Array";
 
+export {NodeBinaryDisk} from "./implementations/binary/disk/NodeBinaryDisk";
+export {NodeManagerBinaryDisk} from "./implementations/binary/disk/NodeManagerBinaryDisk";
+
 export {NodeBinaryMemory} from "./implementations/binary/memory/NodeBinaryMemory";
 export {NodeManagerBinaryMemory} from "./implementations/binary/memory/NodeManagerBinaryMemory";
