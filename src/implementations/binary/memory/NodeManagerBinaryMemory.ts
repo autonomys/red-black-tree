@@ -1,7 +1,7 @@
-import {INodeManager} from "./INodeManager";
+import {INodeManager} from "../../..";
+import {RuntimeError} from "../../../RuntimeError";
+import {compareUint8Array, getNumberFromBytes, maxNumberToBytes, setNumberToBytes} from "../../../utils";
 import {NodeBinaryMemory} from "./NodeBinaryMemory";
-import {RuntimeError} from "./RuntimeError";
-import {compareUint8Array, getOffsetFromBytes, maxNumberToBytes, setOffsetToBytes} from "./utils";
 
 /**
  * Node manager implementation that can work with any data type supported in Node.js as a value
@@ -58,7 +58,7 @@ export class NodeManagerBinaryMemory implements INodeManager<Uint8Array, Uint8Ar
     ) {
     }
 
-    public get root(): NodeBinaryMemory | null {
+    public getRoot(): NodeBinaryMemory | null {
         if (this.rootCache === undefined) {
             const offset = this.getRootNodeOffset();
             this.rootCache = offset === this.numberOfNodes ? null : this.getNode(offset);
@@ -67,7 +67,7 @@ export class NodeManagerBinaryMemory implements INodeManager<Uint8Array, Uint8Ar
         return this.rootCache;
     }
 
-    public set root(node: NodeBinaryMemory | null) {
+    public setRoot(node: NodeBinaryMemory | null): void {
         this.rootCache = node;
         if (node === null) {
             this.setRootNodeOffset(this.numberOfNodes);
@@ -80,14 +80,11 @@ export class NodeManagerBinaryMemory implements INodeManager<Uint8Array, Uint8Ar
         const offset = this.allocateOffsetForAddition();
         const singleNodeAllocationSize = this.singleNodeAllocationSize;
         const nodeOffsetBytes = this.nodeOffsetBytes;
-        const nodeData = this.uint8Array.subarray(
-            nodeOffsetBytes * 3 + singleNodeAllocationSize * offset,
-            nodeOffsetBytes * 3 + singleNodeAllocationSize * (offset + 1),
-        );
         return NodeBinaryMemory.create(
             nodeOffsetBytes,
             this.numberOfNodes,
-            nodeData,
+            this.uint8Array,
+            nodeOffsetBytes * 3 + singleNodeAllocationSize * offset,
             offset,
             key,
             value,
@@ -99,13 +96,14 @@ export class NodeManagerBinaryMemory implements INodeManager<Uint8Array, Uint8Ar
         const singleNodeAllocationSize = this.singleNodeAllocationSize;
         const nodeOffsetBytes = this.nodeOffsetBytes;
         const offset = node.offset;
-        const nodeData = this.uint8Array.subarray(
-            nodeOffsetBytes * 3 + singleNodeAllocationSize * offset,
-            nodeOffsetBytes * 3 + singleNodeAllocationSize * (offset + 1),
-        );
         const lastDeletedOffset = this.getDeletedNodeOffset();
         // Store previous last deleted node in currently deleting node data
-        setOffsetToBytes(nodeData, nodeOffsetBytes, lastDeletedOffset);
+        setNumberToBytes(
+            this.uint8Array,
+            nodeOffsetBytes * 3 + singleNodeAllocationSize * offset,
+            nodeOffsetBytes,
+            lastDeletedOffset,
+        );
         // Update last deleted node offset
         this.setDeletedNodeOffset(offset);
     }
@@ -128,12 +126,12 @@ export class NodeManagerBinaryMemory implements INodeManager<Uint8Array, Uint8Ar
             if (offset === numberOfNodes) {
                 throw new RuntimeError("No space left for new nodes");
             }
-            const deletedNode = this.uint8Array.subarray(
-                nodeOffsetBytes * 3 + singleNodeAllocationSize * offset,
-                nodeOffsetBytes * 3 + singleNodeAllocationSize * (offset + 1),
-            );
             // By convention deleted node stores offset of previous deleted node in its first bytes
-            const previousOffset = getOffsetFromBytes(deletedNode, nodeOffsetBytes);
+            const previousOffset = getNumberFromBytes(
+                this.uint8Array,
+                nodeOffsetBytes * 3 + singleNodeAllocationSize * offset,
+                nodeOffsetBytes,
+            );
             this.setDeletedNodeOffset(previousOffset);
             return offset;
         }
@@ -142,14 +140,11 @@ export class NodeManagerBinaryMemory implements INodeManager<Uint8Array, Uint8Ar
     private getNode(offset: number): NodeBinaryMemory {
         const singleNodeAllocationSize = this.singleNodeAllocationSize;
         const nodeOffsetBytes = this.nodeOffsetBytes;
-        const nodeData = this.uint8Array.subarray(
-            nodeOffsetBytes * 3 + singleNodeAllocationSize * offset,
-            nodeOffsetBytes * 3 + singleNodeAllocationSize * (offset + 1),
-        );
         return NodeBinaryMemory.read(
             nodeOffsetBytes,
             this.numberOfNodes,
-            nodeData,
+            this.uint8Array,
+            nodeOffsetBytes * 3 + singleNodeAllocationSize * offset,
             offset,
             this.keySize,
             this.valueSize,
@@ -158,38 +153,30 @@ export class NodeManagerBinaryMemory implements INodeManager<Uint8Array, Uint8Ar
     }
 
     private getFreeNodeOffset(): number {
-        const nodeOffsetBytes = this.nodeOffsetBytes;
-        const nextFreeNode = this.uint8Array.subarray(0, nodeOffsetBytes);
-        return getOffsetFromBytes(nextFreeNode, nodeOffsetBytes);
+        return getNumberFromBytes(this.uint8Array, 0, this.nodeOffsetBytes);
     }
 
     private setFreeNodeOffset(offset: number): void {
-        const nodeOffsetBytes = this.nodeOffsetBytes;
-        const nextFreeNode = this.uint8Array.subarray(0, nodeOffsetBytes);
-        setOffsetToBytes(nextFreeNode, nodeOffsetBytes, offset);
+        setNumberToBytes(this.uint8Array, 0, this.nodeOffsetBytes, offset);
     }
 
     private getDeletedNodeOffset(): number {
         const nodeOffsetBytes = this.nodeOffsetBytes;
-        const lastDeletedNode = this.uint8Array.subarray(nodeOffsetBytes, nodeOffsetBytes * 2);
-        return getOffsetFromBytes(lastDeletedNode, nodeOffsetBytes);
+        return getNumberFromBytes(this.uint8Array, nodeOffsetBytes, nodeOffsetBytes);
     }
 
     private setDeletedNodeOffset(offset: number): void {
         const nodeOffsetBytes = this.nodeOffsetBytes;
-        const lastDeletedNode = this.uint8Array.subarray(nodeOffsetBytes, nodeOffsetBytes * 2);
-        setOffsetToBytes(lastDeletedNode, nodeOffsetBytes, offset);
+        setNumberToBytes(this.uint8Array, nodeOffsetBytes, nodeOffsetBytes, offset);
     }
 
     private getRootNodeOffset(): number {
         const nodeOffsetBytes = this.nodeOffsetBytes;
-        const rootNode = this.uint8Array.subarray(nodeOffsetBytes * 2, nodeOffsetBytes * 3);
-        return getOffsetFromBytes(rootNode, nodeOffsetBytes);
+        return getNumberFromBytes(this.uint8Array, nodeOffsetBytes * 2, nodeOffsetBytes);
     }
 
     private setRootNodeOffset(offset: number): void {
         const nodeOffsetBytes = this.nodeOffsetBytes;
-        const rootNode = this.uint8Array.subarray(nodeOffsetBytes * 2, nodeOffsetBytes * 3);
-        setOffsetToBytes(rootNode, nodeOffsetBytes, offset);
+        setNumberToBytes(this.uint8Array, nodeOffsetBytes * 2, nodeOffsetBytes, offset);
     }
 }

@@ -1,56 +1,57 @@
 import {INode} from "./interfaces/INode";
-import {INodeManager} from "./interfaces/INodeManager";
+import {INodeAsync} from "./interfaces/INodeAsync";
+import {INodeManagerAsync} from "./interfaces/INodeManagerAsync";
 import {fixTree, removeNodeImplementation} from "./RedBlackTreeMechanics";
 
-/**
- * Resources used to write this:
- * * https://www.youtube.com/playlist?list=PL9xmBV_5YoZNqDI8qfOZgzbqahCUmUEin
- * * https://www.youtube.com/watch?v=YCo2-H2CL6Q
- * * https://www.youtube.com/watch?v=eO3GzpCCUSg
- */
-export class Tree<K, V> {
-    constructor(private nodeManager: INodeManager<K, V>) {
+export class TreeAsync<K, V> {
+    constructor(private nodeManager: INodeManagerAsync<K, V>) {
     }
 
     /**
      * Add nodes to a tree one by one (for incremental updates)
      *
-     * @param key
+     * @param key  A key to be indexed, e.g. a 32 byte piece id
      * @param value Value to be associated with a key
      */
-    public addNode(key: K, value: V): void {
-        this.addNodeInternal(key, value);
+    public async addNode(key: K, value: V): Promise<void> {
+        await this.nodeManager.writeTransaction(() => {
+            return this.addNodeInternal(key, value);
+        });
         this.nodeManager.cleanup();
     }
 
     /**
      * Remove a node from the tree
      *
-     * @param key
+     * @param key A key to be removed, e.g. a 32 byte piece id
      */
-    public removeNode(key: K): void {
-        this.removeNodeInternal(key);
+    public async removeNode(key: K): Promise<void> {
+        await this.nodeManager.writeTransaction(() => {
+            return this.removeNodeInternal(key);
+        });
         this.nodeManager.cleanup();
     }
 
     /**
-     * Get the closest node key/value in a tree to a given target key
+     * Get the closest node/key in a tree to a given target in the same key space
      *
-     * @param targetKey
+     * @param targetKey The target for evaluation, e.g. a challenge in the same key space
      *
      * @return [key, value] The closest key to the challenge or `null` if no nodes are available and its value
      */
-    public getClosestNode(targetKey: K): [K, V] | null {
-        const result = this.getClosestNodeInternal(targetKey);
+    public async getClosestNode(targetKey: K): Promise<[K, V] | null> {
+        const result = await this.nodeManager.readTransaction(() => {
+            return this.getClosestNodeInternal(targetKey);
+        });
         this.nodeManager.cleanup();
         return result;
     }
 
-    private addNodeInternal(key: K, value: V): void {
+    private async addNodeInternal(key: K, value: V): Promise<void> {
         const nodeManager = this.nodeManager;
-        const nodeToInsert = nodeManager.addNode(key, value);
+        const nodeToInsert = await nodeManager.addNodeAsync(key, value);
 
-        const root = nodeManager.getRoot();
+        const root = await nodeManager.getRootAsync();
         if (!root) {
             nodeToInsert.setIsRed(false);
             nodeManager.setRoot(nodeToInsert);
@@ -59,9 +60,12 @@ export class Tree<K, V> {
             const path: Array<INode<K, V>> = [];
             while (true) {
                 path.push(currentNode);
+                // Force reading both children, we may need them during tree fixing process and unless they are in cache, `getLeft()` and `getRight()` methods
+                // will fail for `INodeAsync`
+                const left = await currentNode.getLeftAsync();
+                const right = await currentNode.getRightAsync();
                 switch (nodeManager.compare(nodeToInsert.getKey(), currentNode.getKey())) {
                     case -1:
-                        const left = currentNode.getLeft();
                         if (left) {
                             currentNode = left;
                             break;
@@ -72,7 +76,6 @@ export class Tree<K, V> {
                             return;
                         }
                     case 1:
-                        const right = currentNode.getRight();
                         if (right) {
                             currentNode = right;
                             break;
@@ -90,15 +93,15 @@ export class Tree<K, V> {
         }
     }
 
-    private removeNodeInternal(key: K): void {
+    private async removeNodeInternal(key: K): Promise<void> {
         const nodeManager = this.nodeManager;
-        const root = nodeManager.getRoot();
+        const root = await nodeManager.getRootAsync();
 
         if (!root) {
             throw new Error("Tree is empty, nothing to delete");
         }
 
-        if (!root.getLeft() && !root.getRight()) {
+        if (!await root.getLeftAsync() && !await root.getRightAsync()) {
             nodeManager.setRoot(null);
             return;
         }
@@ -106,9 +109,12 @@ export class Tree<K, V> {
         const path: Array<INode<K, V>> = [];
         while (true) {
             path.push(currentNode);
+            // Force reading both children, we may need them during tree fixing process and unless they are in cache, `getLeft()` and `getRight()` methods
+            // will fail for `INodeAsync`
+            const left = await currentNode.getLeftAsync();
+            const right = await currentNode.getRightAsync();
             switch (nodeManager.compare(key, currentNode.getKey())) {
                 case -1:
-                    const left = currentNode.getLeft();
                     if (left) {
                         currentNode = left;
                         break;
@@ -116,7 +122,6 @@ export class Tree<K, V> {
                         throw new Error("Can't delete a key, it doesn't exist");
                     }
                 case 1:
-                    const right = currentNode.getRight();
                     if (right) {
                         currentNode = right;
                         break;
@@ -129,15 +134,15 @@ export class Tree<K, V> {
                         return;
                     }
                     removeNodeImplementation(this.nodeManager, path);
-                    nodeManager.removeNode(currentNode);
+                    await nodeManager.removeNodeAsync(currentNode);
                     return;
             }
         }
     }
 
-    private getClosestNodeInternal(targetKey: K): [K, V] | null {
+    private async getClosestNodeInternal(targetKey: K): Promise<[K, V] | null> {
         const nodeManager = this.nodeManager;
-        let currentNode = nodeManager.getRoot();
+        let currentNode = await nodeManager.getRootAsync();
         if (!currentNode) {
             return null;
         }
@@ -145,23 +150,25 @@ export class Tree<K, V> {
             const key = currentNode.getKey();
             switch (nodeManager.compare(targetKey, key)) {
                 case -1:
-                    const left = currentNode.getLeft();
+                    // TypeScript fails to infer type, so have to specify it explicitly
+                    const left: INodeAsync<K, V> | null = await currentNode.getLeftAsync();
                     if (left) {
                         currentNode = left;
                         break;
                     } else {
-                        return [key, currentNode.getValue()];
+                        return [key, await currentNode.getValueAsync()];
                     }
                 case 1:
-                    const right = currentNode.getRight();
+                    // TypeScript fails to infer type, so have to specify it explicitly
+                    const right: INodeAsync<K, V> | null = await currentNode.getRightAsync();
                     if (right) {
                         currentNode = right;
                         break;
                     } else {
-                        return [key, currentNode.getValue()];
+                        return [key, await currentNode.getValueAsync()];
                     }
                 default:
-                    return [key, currentNode.getValue()];
+                    return [key, await currentNode.getValueAsync()];
             }
         }
     }
