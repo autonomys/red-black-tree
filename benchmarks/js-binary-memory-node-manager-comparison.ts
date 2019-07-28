@@ -3,12 +3,13 @@ import {randomBytes} from "crypto";
 import {NodeManagerBinaryMemory, NodeManagerJsUint8Array, Tree} from "../src";
 
 const LOOPS = 100;
+const NUMBER_OF_ELEMENTS = 2 ** 14;
 
 console.log('Preparing');
 
 const uint8Arrays: Uint8Array[] = [];
 
-for (let i = 0; i < 2 ** 14; ++i) {
+for (let i = 0; i < NUMBER_OF_ELEMENTS; ++i) {
     const randomValue = randomBytes(32);
     uint8Arrays.push(
         Uint8Array.from(randomValue),
@@ -30,7 +31,7 @@ const empty = new Uint8Array(0);
                 tree.addNode(key, empty);
             }
         }
-        console.log(`JS addition: ${(process.hrtime.bigint() - start) / 1000000n}ms`);
+        console.log(`JS addition: ${(process.hrtime.bigint() - start) / BigInt(LOOPS) / BigInt(NUMBER_OF_ELEMENTS)}ns / element`);
     }
 
     {
@@ -47,7 +48,7 @@ const empty = new Uint8Array(0);
                 tree.getClosestNode(key);
             }
         }
-        console.log(`JS search: ${(process.hrtime.bigint() - start) / 1000000n}ms`);
+        console.log(`JS search: ${(process.hrtime.bigint() - start) / BigInt(LOOPS) / BigInt(NUMBER_OF_ELEMENTS)}ns / element`);
     }
 
     if (global.gc) {
@@ -77,7 +78,7 @@ const empty = new Uint8Array(0);
                 tree.addNode(key, empty);
             }
         }
-        console.log(`Binary Memory addition: ${(process.hrtime.bigint() - start) / 1000000n}ms`);
+        console.log(`Binary Memory addition: ${(process.hrtime.bigint() - start) / BigInt(LOOPS) / BigInt(NUMBER_OF_ELEMENTS)}ns / element`);
     }
 
     {
@@ -93,7 +94,7 @@ const empty = new Uint8Array(0);
                 tree.getClosestNode(key);
             }
         }
-        console.log(`Binary Memory search: ${(process.hrtime.bigint() - start) / 1000000n}ms`);
+        console.log(`Binary Memory search: ${(process.hrtime.bigint() - start) / BigInt(LOOPS) / BigInt(NUMBER_OF_ELEMENTS)}ns / element`);
     }
 
     if (global.gc) {
