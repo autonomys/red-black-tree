@@ -78,7 +78,7 @@ export class NodeManagerBinaryDisk extends NodeManagerAsyncGeneric<Uint8Array, U
         }
         const storageData = await File.open(pathToFile);
 
-        return new NodeManagerBinaryDisk(
+        const instance = new NodeManagerBinaryDisk(
             storageData,
             numberOfNodes,
             nodeOffsetBytes,
@@ -86,11 +86,23 @@ export class NodeManagerBinaryDisk extends NodeManagerAsyncGeneric<Uint8Array, U
             valueSize,
             singleNodeAllocationSize,
         );
+
+        instance.freeNodeOffset = await getNumberFromFileBytes(storageData, 0, nodeOffsetBytes);
+        instance.deletedNodeOffset = await getNumberFromFileBytes(storageData, nodeOffsetBytes, nodeOffsetBytes);
+        instance.rootNodeOffset = await getNumberFromFileBytes(storageData, nodeOffsetBytes * 2, nodeOffsetBytes);
+
+        return instance;
     }
 
     public compare = compareUint8Array;
 
     private rootCache: NodeBinaryDisk | null | undefined = undefined;
+    // @ts-ignore Set in `NodeManagerBinaryDisk.open()` instead of constructor
+    private freeNodeOffset: number;
+    // @ts-ignore Set in `NodeManagerBinaryDisk.open()` instead of constructor
+    private deletedNodeOffset: number;
+    // @ts-ignore Set in `NodeManagerBinaryDisk.open()` instead of constructor
+    private rootNodeOffset: number;
 
     private constructor(
         private readonly storageData: File,
@@ -210,30 +222,31 @@ export class NodeManagerBinaryDisk extends NodeManagerAsyncGeneric<Uint8Array, U
         );
     }
 
-    private getFreeNodeOffset(): Promise<number> {
-        return getNumberFromFileBytes(this.storageData, 0, this.nodeOffsetBytes);
+    private async getFreeNodeOffset(): Promise<number> {
+        return this.freeNodeOffset;
     }
 
     private setFreeNodeOffset(offset: number): Promise<void> {
+        this.freeNodeOffset = offset;
         return setNumberToFileBytes(this.storageData, 0, this.nodeOffsetBytes, offset);
     }
 
-    private getDeletedNodeOffset(): Promise<number> {
-        const nodeOffsetBytes = this.nodeOffsetBytes;
-        return getNumberFromFileBytes(this.storageData, nodeOffsetBytes, nodeOffsetBytes);
+    private async getDeletedNodeOffset(): Promise<number> {
+        return this.deletedNodeOffset;
     }
 
     private setDeletedNodeOffset(offset: number): Promise<void> {
+        this.deletedNodeOffset = offset;
         const nodeOffsetBytes = this.nodeOffsetBytes;
         return setNumberToFileBytes(this.storageData, nodeOffsetBytes, nodeOffsetBytes, offset);
     }
 
-    private getRootNodeOffset(): Promise<number> {
-        const nodeOffsetBytes = this.nodeOffsetBytes;
-        return getNumberFromFileBytes(this.storageData, nodeOffsetBytes * 2, nodeOffsetBytes);
+    private async getRootNodeOffset(): Promise<number> {
+        return this.rootNodeOffset;
     }
 
     private setRootNodeOffset(offset: number): Promise<void> {
+        this.rootNodeOffset = offset;
         const nodeOffsetBytes = this.nodeOffsetBytes;
         return setNumberToFileBytes(this.storageData, nodeOffsetBytes * 2, nodeOffsetBytes, offset);
     }

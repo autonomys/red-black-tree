@@ -1,3 +1,4 @@
+import { unlinkSync } from "fs";
 import shuffle = require("shuffle-array");
 import * as test from "tape";
 import {INodeAsync, NodeManagerBinaryDisk, TreeAsync} from "../src";
@@ -101,6 +102,8 @@ test('Basic test', (t) => {
             t.end();
         });
     }
+
+    unlinkSync(__dirname + '/binary-disk-test.bin');
 
     t.end();
 });

@@ -33,11 +33,26 @@ export class TreeAsync<K, V> {
     }
 
     /**
-     * Get the closest node/key in a tree to a given target in the same key space
+     * Get the node value by target key
      *
-     * @param targetKey The target for evaluation, e.g. a challenge in the same key space
+     * @param targetKey
      *
-     * @return [key, value] The closest key to the challenge or `null` if no nodes are available and its value
+     * @return
+     */
+    public async getNodeValue(targetKey: K): Promise<V | null> {
+        const result = await this.getClosestNodeInternal(targetKey);
+        if (result && this.nodeManager.compare(result[0], targetKey) === 0) {
+            return result[1];
+        }
+        return null;
+    }
+
+    /**
+     * Get the closest node key/value in a tree to a given target key
+     *
+     * @param targetKey
+     *
+     * @return The closest key and its value to the challenge or `null` if no nodes are available
      */
     public async getClosestNode(targetKey: K): Promise<[K, V] | null> {
         const result = await this.nodeManager.readTransaction(() => {

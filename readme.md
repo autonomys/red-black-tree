@@ -47,7 +47,7 @@ Disadvantages: requires specifying max number of nodes upfront, about 5x slower 
 Supports only Uint8Array both for keys and values. The whole tree is only stored on disk, which allows to work with trees that are many times larger than amount of available RAM.
 
 Advantages: supports large trees that don't fit into RAM (node objects are created only when working with tree and are cleaned up right after use)
-Disadvantages: requires specifying max number of nodes upfront, orders of magnitude slower than Binary Memory node manager
+Disadvantages: requires specifying max number of nodes upfront, orders of magnitude slower than Binary Memory node manager (depending on disk performance)
 
 ### How to install
 ```bash
@@ -91,6 +91,9 @@ Add a new node to the tree.
 #### redBlackTree.Tree.removeNode(key: K): void
 Remove node from the tree.
 
+#### redBlackTree.Tree.getNodeValue(targetKey: K): V | null
+Get the node value by target key, `null` if key if not found.
+
 #### redBlackTree.Tree.getClosestNode(targetKey: K): [K, V] | null
 Get closest node key/value to `targetKey` (can be exact match or not, please check if needed) or `null` if not found.
 
@@ -101,6 +104,9 @@ The same as in regular `Tree`, but for asynchronous node managers.
 The same as in regular `Tree`, but for asynchronous node managers.
 
 #### redBlackTree.TreeAsync.removeNode(key: K): Promise<void>
+The same as in regular `Tree`, but for asynchronous node managers.
+
+#### redBlackTree.Tree.getNodeValue(targetKey: K): Promise<V | null>
 The same as in regular `Tree`, but for asynchronous node managers.
 
 #### redBlackTree.TreeAsync.getClosestNode(targetKey: K): Promise<[K, V] | null>
@@ -150,7 +156,13 @@ Basic asynchronous node manager interface in case you want to create custom impl
 ### Benchmarks
 There are some benchmarks under `benchmarks` directory:
 * `Buffer-vs-Uint8Array-vs-BigInt.ts` was used to make a choice how to compare binary values with highest speed (this is why even in Node.js `Uint8Array` is used instead of more convenient `Buffer`)
-* `js-binary-memory-node-manager-comparison.ts` compares performance of in-memory node managers
+* `node-managers-vs-rocksdb-comparison.ts` compares performance of different node managers in terms of insertion and lookup performance as well as memory consumption including comparison with RocksDB
+
+You can run them with following commands:
+```bash
+npm run buffer-uint-bigint-benchmark
+npm run node-managers-rocksdb-benchmark
+```
 
 ### Tests
 Project is covered with tests that ensure things work as expected and do not regress, run them with usual `npm test`.
