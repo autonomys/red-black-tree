@@ -74,31 +74,27 @@ function getNumberOfNotNullNodes(node: INode<number, null> | null): number {
 
 test('Basic test', (t) => {
     const keys: number[] = [];
-    for (let i = 0; i < 255; ++i) {
-        keys.push(i);
+    for (let i = 0; i < 8; ++i) {
+        for (let j = 0; j < 255; ++j) {
+            keys.push(i * 255 + j);
+        }
     }
     shuffle(keys);
 
-    for (let i = 1; i <= 10; ++i) {
-        t.test(`Round ${i}`, (t) => {
-            const nodeManager = new NodeManagerJsNumber<null>();
-            const tree = new Tree(nodeManager);
-            let expectedNumberOfNodes = 0;
-            for (const key of keys) {
-                ++expectedNumberOfNodes;
-                tree.addNode(key, null);
-                validateRulesFollowed(t, `Inserting key ${key}`, nodeManager, expectedNumberOfNodes);
-            }
-            shuffle(keys);
+    const nodeManager = new NodeManagerJsNumber<null>();
+    const tree = new Tree(nodeManager);
+    let expectedNumberOfNodes = 0;
+    for (const key of keys) {
+        ++expectedNumberOfNodes;
+        tree.addNode(key, null);
+        validateRulesFollowed(t, `Inserting key ${key}`, nodeManager, expectedNumberOfNodes);
+    }
+    shuffle(keys);
 
-            for (const key of keys) {
-                --expectedNumberOfNodes;
-                tree.removeNode(key);
-                validateRulesFollowed(t, `Deleting key ${key}`, nodeManager, expectedNumberOfNodes);
-            }
-
-            t.end();
-        });
+    for (const key of keys) {
+        --expectedNumberOfNodes;
+        tree.removeNode(key);
+        validateRulesFollowed(t, `Deleting key ${key}`, nodeManager, expectedNumberOfNodes);
     }
 
     t.end();

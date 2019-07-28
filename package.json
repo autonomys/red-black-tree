@@ -8,7 +8,7 @@
     "search tree",
     "self-balancing"
   ],
-  "version": "0.1.0",
+  "version": "0.1.1",
   "homepage": "https://github.com/subspace/red-black-tree",
   "author": "Nazar Mokrynskyi <nazar@mokrynskyi.com>",
   "repository": {
@@ -19,7 +19,8 @@
   "main": "dist/index.js",
   "types": "dist/index.d.ts",
   "files": [
-    "dist"
+    "dist/**/*.js",
+    "dist/**/*.d.ts"
   ],
   "scripts": {
     "buffer-uint-bigint-benchmark": "ts-node benchmarks/buffer-uint-bigint-benchmark.ts",
@@ -29,7 +30,7 @@
     "compile": "tsc -b",
     "lint": "tslint --project .",
     "test": "npm run lint && ts-node node_modules/.bin/tape tests/**/*.ts",
-    "publish": "npm run build && npm publish"
+    "build-and-publish": "npm run build && npm publish"
   },
   "dependencies": {
     "@types/node": "^12.6.8"

@@ -73,31 +73,27 @@ function getNumberOfNotNullNodes(node: INode<Uint8Array, Uint8Array> | null): nu
 }
 
 test('Basic test', (t) => {
-    const keys: number[] = [];
-    for (let i = 0; i < 255; ++i) {
-        keys.push(i);
+    const keys: Uint8Array[] = [];
+    for (let i = 0; i < 8; ++i) {
+        for (let j = 0; j < 255; ++j) {
+            keys.push(Uint8Array.of(i, j));
+        }
     }
 
-    for (let i = 1; i <= 10; ++i) {
-        t.test(`Round ${i}`, (t) => {
-            const nodeManager = NodeManagerBinaryMemory.create(300, 1, 0);
-            const tree = new Tree(nodeManager);
-            let expectedNumberOfNodes = 0;
-            for (const key of keys) {
-                ++expectedNumberOfNodes;
-                tree.addNode(Uint8Array.of(key), new Uint8Array(0));
-                validateRulesFollowed(t, `Inserting key ${key}`, nodeManager, expectedNumberOfNodes);
-            }
-            shuffle(keys);
+    const nodeManager = NodeManagerBinaryMemory.create(keys.length, 2, 0);
+    const tree = new Tree(nodeManager);
+    let expectedNumberOfNodes = 0;
+    for (const key of keys) {
+        ++expectedNumberOfNodes;
+        tree.addNode(key, new Uint8Array(0));
+        validateRulesFollowed(t, `Inserting key [${key.join(', ')}]`, nodeManager, expectedNumberOfNodes);
+    }
+    shuffle(keys);
 
-            for (const key of keys) {
-                --expectedNumberOfNodes;
-                tree.removeNode(Uint8Array.of(key));
-                validateRulesFollowed(t, `Deleting key ${key}`, nodeManager, expectedNumberOfNodes);
-            }
-
-            t.end();
-        });
+    for (const key of keys) {
+        --expectedNumberOfNodes;
+        tree.removeNode(key);
+        validateRulesFollowed(t, `Deleting key [${key.join(', ')}]`, nodeManager, expectedNumberOfNodes);
     }
 
     t.end();

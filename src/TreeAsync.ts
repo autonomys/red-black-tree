@@ -1,7 +1,7 @@
 import {INode} from "./interfaces/INode";
 import {INodeAsync} from "./interfaces/INodeAsync";
 import {INodeManagerAsync} from "./interfaces/INodeManagerAsync";
-import {fixTree, removeNodeImplementation} from "./RedBlackTreeMechanics";
+import {fixTree, removeNodeImplementationAsync} from "./RedBlackTreeMechanics";
 
 export class TreeAsync<K, V> {
     constructor(private nodeManager: INodeManagerAsync<K, V>) {
@@ -121,15 +121,12 @@ export class TreeAsync<K, V> {
             return;
         }
         let currentNode = root;
-        const path: Array<INode<K, V>> = [];
+        const path: Array<INodeAsync<K, V>> = [];
         while (true) {
             path.push(currentNode);
-            // Force reading both children, we may need them during tree fixing process and unless they are in cache, `getLeft()` and `getRight()` methods
-            // will fail for `INodeAsync`
-            const left = await currentNode.getLeftAsync();
-            const right = await currentNode.getRightAsync();
             switch (nodeManager.compare(key, currentNode.getKey())) {
                 case -1:
+                    const left = await currentNode.getLeftAsync();
                     if (left) {
                         currentNode = left;
                         break;
@@ -137,6 +134,7 @@ export class TreeAsync<K, V> {
                         throw new Error("Can't delete a key, it doesn't exist");
                     }
                 case 1:
+                    const right = await currentNode.getRightAsync();
                     if (right) {
                         currentNode = right;
                         break;
@@ -148,7 +146,7 @@ export class TreeAsync<K, V> {
                         nodeManager.setRoot(null);
                         return;
                     }
-                    removeNodeImplementation(this.nodeManager, path);
+                    await removeNodeImplementationAsync(this.nodeManager, path);
                     await nodeManager.removeNodeAsync(currentNode);
                     return;
             }

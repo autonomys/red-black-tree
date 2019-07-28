@@ -73,36 +73,33 @@ async function getNumberOfNotNullNodes(node: INodeAsync<Uint8Array, Uint8Array> 
     return 1 + await getNumberOfNotNullNodes(await node.getLeftAsync()) + await getNumberOfNotNullNodes(await node.getRightAsync());
 }
 
-test('Basic test', (t) => {
-    const keys: number[] = [];
-    for (let i = 0; i < 255; ++i) {
-        keys.push(i);
+test('Basic test', async (t) => {
+    const keys: Uint8Array[] = [];
+    for (let i = 0; i < 8; ++i) {
+        for (let j = 0; j < 255; ++j) {
+            keys.push(Uint8Array.of(i, j));
+        }
     }
 
-    for (let i = 1; i <= 10; ++i) {
-        t.test(`Round ${i}`, async (t) => {
-            const nodeManager = await NodeManagerBinaryDisk.create(__dirname + '/binary-disk-test.bin', 300, 1, 0);
-            const tree = new TreeAsync(nodeManager);
-            let expectedNumberOfNodes = 0;
-            for (const key of keys) {
-                ++expectedNumberOfNodes;
-                await tree.addNode(Uint8Array.of(key), new Uint8Array(0));
-                await validateRulesFollowed(t, `Inserting key ${key}`, nodeManager, expectedNumberOfNodes);
-            }
-            shuffle(keys);
-
-            for (const key of keys) {
-                --expectedNumberOfNodes;
-                await tree.removeNode(Uint8Array.of(key));
-                await validateRulesFollowed(t, `Deleting key ${key}`, nodeManager, expectedNumberOfNodes);
-            }
-
-            await nodeManager.close();
-
-            unlinkSync(__dirname + '/binary-disk-test.bin');
-
-            t.end();
-        });
+    const nodeManager = await NodeManagerBinaryDisk.create(__dirname + '/binary-disk-test.bin', keys.length, 2, 0);
+    const tree = new TreeAsync(nodeManager);
+    let expectedNumberOfNodes = 0;
+    for (const key of keys) {
+        ++expectedNumberOfNodes;
+        await tree.addNode(key, new Uint8Array(0));
+        await validateRulesFollowed(t, `Inserting key [${key.join(', ')}]`, nodeManager, expectedNumberOfNodes);
     }
+    shuffle(keys);
+
+    for (const key of keys) {
+        --expectedNumberOfNodes;
+        await tree.removeNode(key);
+        await validateRulesFollowed(t, `Deleting key [${key.join(', ')}]`, nodeManager, expectedNumberOfNodes);
+    }
+
+    await nodeManager.close();
+
+    unlinkSync(__dirname + '/binary-disk-test.bin');
+
     t.end();
 });
