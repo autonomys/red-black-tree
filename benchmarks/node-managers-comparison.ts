@@ -123,18 +123,23 @@ const empty = new Uint8Array(0);
         for (let i = 0; i < NUMBER_OF_ELEMENTS; ++i) {
             await tree.addNode(uint8Arrays[i], empty);
         }
-        console.log(`Binary Disk addition: ${(process.hrtime.bigint() - start) / BigInt(NUMBER_OF_ELEMENTS)}ns / element`);
+        console.log(`Binary Disk addition: ${(process.hrtime.bigint() - start) / 1024n / BigInt(NUMBER_OF_ELEMENTS)}us / element`);
         await nodeManager.close();
     }
 
     {
         const nodeManager = await NodeManagerBinaryDisk.create(__dirname + '/binary-disk-benchmark.bin', NUMBER_OF_ELEMENTS, 32, 0);
+        const tree = new TreeAsync(nodeManager);
+        for (let i = 0; i < NUMBER_OF_ELEMENTS; ++i) {
+            await tree.addNode(uint8Arrays[i], empty);
+        }
+
         const start = process.hrtime.bigint();
         const tree = new TreeAsync(nodeManager);
         for (let i = 0; i < NUMBER_OF_ELEMENTS; ++i) {
             await tree.getClosestNode(uint8Arrays[i]);
         }
-        console.log(`Binary Disk addition: ${(process.hrtime.bigint() - start) / BigInt(NUMBER_OF_ELEMENTS)}ns / element`);
+        console.log(`Binary Disk search: ${(process.hrtime.bigint() - start) / 1024n / BigInt(NUMBER_OF_ELEMENTS)}us / element`);
         await nodeManager.close();
     }
 
@@ -144,7 +149,7 @@ const empty = new Uint8Array(0);
         const nodeManager = await NodeManagerBinaryDisk.create(__dirname + '/binary-disk-benchmark.bin', NUMBER_OF_ELEMENTS, 32, 0);
         const tree = new TreeAsync(nodeManager);
         for (let i = 0; i < NUMBER_OF_ELEMENTS; ++i) {
-            await tree.getClosestNode(uint8Arrays[i]);
+            await tree.addNode(uint8Arrays[i], empty);
         }
         global.gc();
         await nodeManager.close();
