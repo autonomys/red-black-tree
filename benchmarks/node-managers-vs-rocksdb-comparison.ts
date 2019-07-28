@@ -180,7 +180,7 @@ function rmdirRecursiveSync(dir: string): void {
         console.log(`Start with node --expose-gc (which ts-node) ${process.argv[1]} to enable heap usage measuring`);
     }
 
-    // unlinkSync(__dirname + '/binary-disk-benchmark.bin');
+    unlinkSync(__dirname + '/binary-disk-benchmark.bin');
 
     {
         const rocksDb = level(__dirname + '/rocksdb-benchmark.bin');
@@ -218,7 +218,7 @@ function rmdirRecursiveSync(dir: string): void {
         }
         global.gc();
         await rocksDb.close();
-        // rmdirRecursiveSync(__dirname + '/rocksdb-benchmark.bin');
+        rmdirRecursiveSync(__dirname + '/rocksdb-benchmark.bin');
 
         // TODO: Figure out why this thing gives negative memory difference, it doesn't make sense
         console.log(`RocksDB heap usage when idle: ${((process.memoryUsage().heapUsed - usageBefore) / 1024 / 1024).toFixed(2)}MiB`);
