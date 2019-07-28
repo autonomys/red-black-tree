@@ -28,7 +28,8 @@
     "clean": "rm -rf dist",
     "compile": "tsc -b",
     "lint": "tslint --project .",
-    "test": "npm run lint && ts-node node_modules/.bin/tape tests/**/*.ts"
+    "test": "npm run lint && ts-node node_modules/.bin/tape tests/**/*.ts",
+    "publish": "npm run build && npm publish"
   },
   "dependencies": {
     "@types/node": "^12.6.8"

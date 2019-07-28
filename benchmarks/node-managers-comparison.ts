@@ -1,5 +1,6 @@
 /* tslint:disable:no-console */
 import {randomBytes} from "crypto";
+import {unlinkSync} from "fs";
 import {NodeManagerBinaryDisk, NodeManagerBinaryMemory, NodeManagerJsUint8Array, Tree, TreeAsync} from "../src";
 
 const LOOPS = 100;
@@ -153,4 +154,6 @@ const empty = new Uint8Array(0);
     } else {
         console.log(`Start with node --expose-gc (which ts-node) ${process.argv[1]} to enable heap usage measuring`);
     }
+
+    unlinkSync(__dirname + '/binary-disk-benchmark.bin');
 })();
