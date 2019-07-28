@@ -22,6 +22,8 @@
     "dist"
   ],
   "scripts": {
+    "buffer-uint-bigint-benchmark": "ts-node benchmarks/buffer-uint-bigint-benchmark.ts",
+    "node-managers-benchmark": "node --expose-gc $(which ts-node) benchmarks/node-managers-comparison.ts",
     "build": "npm run clean && npm run lint && npm run compile",
     "clean": "rm -rf dist",
     "compile": "tsc -b",

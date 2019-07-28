@@ -1,6 +1,6 @@
 /* tslint:disable:no-console */
 import {randomBytes} from "crypto";
-import {NodeManagerBinaryMemory, NodeManagerJsUint8Array, Tree} from "../src";
+import {NodeManagerBinaryDisk, NodeManagerBinaryMemory, NodeManagerJsUint8Array, Tree, TreeAsync} from "../src";
 
 const LOOPS = 100;
 const NUMBER_OF_ELEMENTS = 2 ** 14;
@@ -113,3 +113,44 @@ const empty = new Uint8Array(0);
         console.log(`Start with node --expose-gc (which ts-node) ${process.argv[1]} to enable heap usage measuring`);
     }
 }
+
+(async () => {
+    {
+        const nodeManager = await NodeManagerBinaryDisk.create(__dirname + '/binary-disk-benchmark.bin', NUMBER_OF_ELEMENTS, 32, 0);
+        const start = process.hrtime.bigint();
+        const tree = new TreeAsync(nodeManager);
+        for (let i = 0; i < NUMBER_OF_ELEMENTS; ++i) {
+            await tree.addNode(uint8Arrays[i], empty);
+        }
+        console.log(`Binary Disk addition: ${(process.hrtime.bigint() - start) / 1024n / BigInt(NUMBER_OF_ELEMENTS)}us / element`);
+        await nodeManager.close();
+    }
+
+    {
+        const nodeManager = await NodeManagerBinaryDisk.create(__dirname + '/binary-disk-benchmark.bin', NUMBER_OF_ELEMENTS, 32, 0);
+        const start = process.hrtime.bigint();
+        const tree = new TreeAsync(nodeManager);
+        for (let i = 0; i < NUMBER_OF_ELEMENTS; ++i) {
+            await tree.getClosestNode(uint8Arrays[i]);
+        }
+        console.log(`Binary Disk addition: ${(process.hrtime.bigint() - start) / 1024n / BigInt(NUMBER_OF_ELEMENTS)}us / element`);
+        await nodeManager.close();
+    }
+
+    if (global.gc) {
+        global.gc();
+        const usageBefore = process.memoryUsage().heapUsed;
+        const nodeManager = await NodeManagerBinaryDisk.create(__dirname + '/binary-disk-benchmark.bin', NUMBER_OF_ELEMENTS, 32, 0);
+        const tree = new TreeAsync(nodeManager);
+        for (let i = 0; i < NUMBER_OF_ELEMENTS; ++i) {
+            await tree.getClosestNode(uint8Arrays[i]);
+        }
+        global.gc();
+        await nodeManager.close();
+
+        // TODO: Figure out why this thing gives negative memory difference, it doesn't make sense
+        console.log(`Binary Disk heap usage when idle: ${((process.memoryUsage().heapUsed - usageBefore) / 1024 / 1024).toFixed(2)}MiB`);
+    } else {
+        console.log(`Start with node --expose-gc (which ts-node) ${process.argv[1]} to enable heap usage measuring`);
+    }
+})();

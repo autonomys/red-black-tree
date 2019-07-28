@@ -1,5 +1,6 @@
 .idea
 .vscode
+benchmarks/binary-disk-benchmark.bin
 dist
 node_modules
 tests/binary-disk-test.bin
