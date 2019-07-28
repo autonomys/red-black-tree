@@ -47,6 +47,9 @@ export class NodeManagerBinaryMemory implements INodeManager<Uint8Array, Uint8Ar
     public compare = compareUint8Array;
 
     private rootCache: NodeBinaryMemory | null | undefined = undefined;
+    private freeNodeOffset: number;
+    private deletedNodeOffset: number;
+    private rootNodeOffset: number;
 
     private constructor(
         private readonly uint8Array: Uint8Array,
@@ -56,6 +59,9 @@ export class NodeManagerBinaryMemory implements INodeManager<Uint8Array, Uint8Ar
         private readonly valueSize: number,
         private readonly singleNodeAllocationSize: number,
     ) {
+        this.freeNodeOffset = getNumberFromBytes(this.uint8Array, 0, this.nodeOffsetBytes);
+        this.deletedNodeOffset = getNumberFromBytes(this.uint8Array, nodeOffsetBytes, nodeOffsetBytes);
+        this.rootNodeOffset = getNumberFromBytes(this.uint8Array, nodeOffsetBytes * 2, nodeOffsetBytes);
     }
 
     public getRoot(): NodeBinaryMemory | null {
@@ -153,29 +159,30 @@ export class NodeManagerBinaryMemory implements INodeManager<Uint8Array, Uint8Ar
     }
 
     private getFreeNodeOffset(): number {
-        return getNumberFromBytes(this.uint8Array, 0, this.nodeOffsetBytes);
+        return this.freeNodeOffset;
     }
 
     private setFreeNodeOffset(offset: number): void {
+        this.freeNodeOffset = offset;
         setNumberToBytes(this.uint8Array, 0, this.nodeOffsetBytes, offset);
     }
 
     private getDeletedNodeOffset(): number {
-        const nodeOffsetBytes = this.nodeOffsetBytes;
-        return getNumberFromBytes(this.uint8Array, nodeOffsetBytes, nodeOffsetBytes);
+        return this.deletedNodeOffset;
     }
 
     private setDeletedNodeOffset(offset: number): void {
+        this.deletedNodeOffset = offset;
         const nodeOffsetBytes = this.nodeOffsetBytes;
         setNumberToBytes(this.uint8Array, nodeOffsetBytes, nodeOffsetBytes, offset);
     }
 
     private getRootNodeOffset(): number {
-        const nodeOffsetBytes = this.nodeOffsetBytes;
-        return getNumberFromBytes(this.uint8Array, nodeOffsetBytes * 2, nodeOffsetBytes);
+        return this.rootNodeOffset;
     }
 
     private setRootNodeOffset(offset: number): void {
+        this.rootNodeOffset = offset;
         const nodeOffsetBytes = this.nodeOffsetBytes;
         setNumberToBytes(this.uint8Array, nodeOffsetBytes * 2, nodeOffsetBytes, offset);
     }

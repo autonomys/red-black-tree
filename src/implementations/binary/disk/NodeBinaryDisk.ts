@@ -1,8 +1,8 @@
 import {INodeAsync} from "../../..";
 import {RuntimeError} from "../../../RuntimeError";
-import {setNumberToBytes} from "../../../utils";
+import {getNumberFromBytes, setNumberToBytes} from "../../../utils";
 import {File} from "./File";
-import {getNumberFromFileBytes, setNumberToFileBytes} from "./utils";
+import {setNumberToFileBytes} from "./utils";
 
 export class NodeBinaryDisk implements INodeAsync<Uint8Array, Uint8Array> {
     /**
@@ -54,6 +54,8 @@ export class NodeBinaryDisk implements INodeAsync<Uint8Array, Uint8Array> {
         const instance = new NodeBinaryDisk(
             offset,
             true,
+            numberOfNodes,
+            numberOfNodes,
             key,
             valueSize,
             source,
@@ -89,13 +91,13 @@ export class NodeBinaryDisk implements INodeAsync<Uint8Array, Uint8Array> {
         valueSize: number,
         getNode: (offset: number) => Promise<NodeBinaryDisk>,
     ): Promise<NodeBinaryDisk> {
-        const isRed = (await source.read(sourceOffset, 1))[0] === 1;
-        const baseOffset = sourceOffset + 1 + nodeOffsetBytes * 2;
-        const key = await source.read(baseOffset, keySize);
+        const header = await source.read(sourceOffset, 1 + 2 * nodeOffsetBytes + keySize);
         return new NodeBinaryDisk(
             offset,
-            isRed,
-            key,
+            header[0] === 1,
+            getNumberFromBytes(header, 1, nodeOffsetBytes),
+            getNumberFromBytes(header, 1 + nodeOffsetBytes, nodeOffsetBytes),
+            header.subarray(1 + 2 * nodeOffsetBytes, 1 + 2 * nodeOffsetBytes + keySize),
             valueSize,
             source,
             sourceOffset,
@@ -111,7 +113,9 @@ export class NodeBinaryDisk implements INodeAsync<Uint8Array, Uint8Array> {
 
     /**
      * @param offset
-     * @param isRedInternal
+     * @param isRed
+     * @param leftOffset
+     * @param rightOffset
      * @param key
      * @param valueSize
      * @param source Binary data where contents of the node is located
@@ -122,7 +126,9 @@ export class NodeBinaryDisk implements INodeAsync<Uint8Array, Uint8Array> {
      */
     constructor(
         public readonly offset: number,
-        private isRedInternal: boolean,
+        private isRed: boolean,
+        private leftOffset: number,
+        private rightOffset: number,
         private readonly key: Uint8Array,
         private readonly valueSize: number,
         private readonly source: File,
@@ -134,12 +140,12 @@ export class NodeBinaryDisk implements INodeAsync<Uint8Array, Uint8Array> {
     }
 
     public getIsRed(): boolean {
-        return this.isRedInternal;
+        return this.isRed;
     }
 
     public setIsRed(isRed: boolean): void {
-        if (isRed !== this.isRedInternal) {
-            this.isRedInternal = isRed;
+        if (isRed !== this.isRed) {
+            this.isRed = isRed;
             this.source.write(this.sourceOffset, Uint8Array.of(isRed ? 1 : 0))
                 .catch(() => {
                     // Just to avoid unhandled promise exception
@@ -153,12 +159,7 @@ export class NodeBinaryDisk implements INodeAsync<Uint8Array, Uint8Array> {
 
     public async getLeftAsync(): Promise<NodeBinaryDisk | null> {
         if (this.leftCache === undefined) {
-            const offset = await getNumberFromFileBytes(
-                this.source,
-                this.sourceOffset + 1,
-                this.nodeOffsetBytes,
-            );
-
+            const offset = this.leftOffset;
             this.leftCache = offset === this.numberOfNodes ? null : await this.getNode(offset);
         }
 
@@ -167,13 +168,7 @@ export class NodeBinaryDisk implements INodeAsync<Uint8Array, Uint8Array> {
 
     public async getRightAsync(): Promise<NodeBinaryDisk | null> {
         if (this.rightCache === undefined) {
-            const nodeOffsetBytes = this.nodeOffsetBytes;
-            const offset = await getNumberFromFileBytes(
-                this.source,
-                this.sourceOffset + 1 + nodeOffsetBytes,
-                nodeOffsetBytes,
-            );
-
+            const offset = this.rightOffset;
             this.rightCache = offset === this.numberOfNodes ? null : await this.getNode(offset);
         }
 
@@ -200,11 +195,13 @@ export class NodeBinaryDisk implements INodeAsync<Uint8Array, Uint8Array> {
     public setLeft(node: NodeBinaryDisk | null): void {
         this.leftCache = node;
 
+        const offset = node ? node.offset : this.numberOfNodes;
+        this.leftOffset = offset;
         setNumberToFileBytes(
             this.source,
             this.sourceOffset + 1,
             this.nodeOffsetBytes,
-            node ? node.offset : this.numberOfNodes,
+            offset,
         )
             .catch(() => {
                 // Just to avoid unhandled promise exception
@@ -223,11 +220,13 @@ export class NodeBinaryDisk implements INodeAsync<Uint8Array, Uint8Array> {
         this.rightCache = node;
 
         const nodeOffsetBytes = this.nodeOffsetBytes;
+        const offset = node ? node.offset : this.numberOfNodes;
+        this.rightOffset = offset;
         setNumberToFileBytes(
             this.source,
             this.sourceOffset + 1 + nodeOffsetBytes,
             nodeOffsetBytes,
-            node ? node.offset : this.numberOfNodes,
+            offset,
         )
             .catch(() => {
                 // Just to avoid unhandled promise exception

@@ -123,7 +123,7 @@ const empty = new Uint8Array(0);
         for (let i = 0; i < NUMBER_OF_ELEMENTS; ++i) {
             await tree.addNode(uint8Arrays[i], empty);
         }
-        console.log(`Binary Disk addition: ${(process.hrtime.bigint() - start) / 1024n / BigInt(NUMBER_OF_ELEMENTS)}us / element`);
+        console.log(`Binary Disk addition: ${(process.hrtime.bigint() - start) / BigInt(NUMBER_OF_ELEMENTS)}ns / element`);
         await nodeManager.close();
     }
 
@@ -134,7 +134,7 @@ const empty = new Uint8Array(0);
         for (let i = 0; i < NUMBER_OF_ELEMENTS; ++i) {
             await tree.getClosestNode(uint8Arrays[i]);
         }
-        console.log(`Binary Disk addition: ${(process.hrtime.bigint() - start) / 1024n / BigInt(NUMBER_OF_ELEMENTS)}us / element`);
+        console.log(`Binary Disk addition: ${(process.hrtime.bigint() - start) / BigInt(NUMBER_OF_ELEMENTS)}ns / element`);
         await nodeManager.close();
     }
 

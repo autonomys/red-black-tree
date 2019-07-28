@@ -47,7 +47,7 @@ Disadvantages: requires specifying max number of nodes upfront, about 5x slower 
 Supports only Uint8Array both for keys and values. The whole tree is only stored on disk, which allows to work with trees that are many times larger than amount of available RAM.
 
 Advantages: supports large trees that don't fit into RAM (node objects are created only when working with tree and are cleaned up right after use)
-Disadvantages: requires specifying max number of nodes upfront, orders of magnitude slower than Binary Memory node manager
+Disadvantages: requires specifying max number of nodes upfront, about an order of magnitude slower than Binary Memory node manager (depending on disk performance)
 
 ### How to install
 ```bash
