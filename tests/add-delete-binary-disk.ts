@@ -99,11 +99,10 @@ test('Basic test', (t) => {
 
             await nodeManager.close();
 
+            unlinkSync(__dirname + '/binary-disk-test.bin');
+
             t.end();
         });
     }
-
-    unlinkSync(__dirname + '/binary-disk-test.bin');
-
     t.end();
 });
