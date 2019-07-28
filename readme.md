@@ -150,12 +150,12 @@ Basic asynchronous node manager interface in case you want to create custom impl
 ### Benchmarks
 There are some benchmarks under `benchmarks` directory:
 * `Buffer-vs-Uint8Array-vs-BigInt.ts` was used to make a choice how to compare binary values with highest speed (this is why even in Node.js `Uint8Array` is used instead of more convenient `Buffer`)
-* `node-managers-comparison.ts` compares performance of different node managers in terms of insertion and lookup performance as well as memory consumption
+* `node-managers-vs-rocksdb-comparison.ts` compares performance of different node managers in terms of insertion and lookup performance as well as memory consumption including comparison with RocksDB
 
 You can run them with following commands:
 ```bash
 npm run buffer-uint-bigint-benchmark
-npm run node-managers-benchmark
+npm run node-managers-rocksdb-benchmark
 ```
 
 ### Tests

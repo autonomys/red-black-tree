@@ -1,6 +1,9 @@
 /* tslint:disable:no-console */
 import {randomBytes} from "crypto";
-import {unlinkSync} from "fs";
+import {readdirSync, rmdirSync, unlinkSync} from "fs";
+// @ts-ignore
+import level = require('level-rocksdb');
+import * as path from 'path';
 import {NodeManagerBinaryDisk, NodeManagerBinaryMemory, NodeManagerJsUint8Array, Tree, TreeAsync} from "../src";
 
 const LOOPS = 100;
@@ -17,9 +20,27 @@ for (let i = 0; i < NUMBER_OF_ELEMENTS; ++i) {
     );
 }
 
+const buffers = uint8Arrays.map((uint8Array) => {
+    return Buffer.from(uint8Array);
+});
+
 console.log('Benchmarking');
 
 const empty = new Uint8Array(0);
+const emptyBuffer = Buffer.alloc(0);
+
+function rmdirRecursiveSync(dir: string): void {
+    const entries = readdirSync(dir, {withFileTypes: true});
+    for (const entry of entries) {
+        const fullPath = path.join(dir, entry.name);
+        if (entry.isDirectory()) {
+            rmdirRecursiveSync(fullPath);
+        } else {
+            unlinkSync(fullPath);
+        }
+    }
+    rmdirSync(dir);
+}
 
 {
     {
@@ -135,7 +156,6 @@ const empty = new Uint8Array(0);
         }
 
         const start = process.hrtime.bigint();
-        const tree = new TreeAsync(nodeManager);
         for (let i = 0; i < NUMBER_OF_ELEMENTS; ++i) {
             await tree.getClosestNode(uint8Arrays[i]);
         }
@@ -160,5 +180,49 @@ const empty = new Uint8Array(0);
         console.log(`Start with node --expose-gc (which ts-node) ${process.argv[1]} to enable heap usage measuring`);
     }
 
-    unlinkSync(__dirname + '/binary-disk-benchmark.bin');
+    // unlinkSync(__dirname + '/binary-disk-benchmark.bin');
+
+    {
+        const rocksDb = level(__dirname + '/rocksdb-benchmark.bin');
+        const start = process.hrtime.bigint();
+        for (let i = 0; i < NUMBER_OF_ELEMENTS; ++i) {
+            await rocksDb.put(buffers[i], emptyBuffer);
+        }
+        console.log(`RocksDB addition: ${(process.hrtime.bigint() - start) / 1024n / BigInt(NUMBER_OF_ELEMENTS)}us / element`);
+        await rocksDb.close();
+        rmdirRecursiveSync(__dirname + '/rocksdb-benchmark.bin');
+    }
+
+    {
+        const rocksDb = level(__dirname + '/rocksdb-benchmark.bin');
+        for (let i = 0; i < NUMBER_OF_ELEMENTS; ++i) {
+            await rocksDb.put(buffers[i], emptyBuffer);
+        }
+
+        const start = process.hrtime.bigint();
+        for (let i = 0; i < NUMBER_OF_ELEMENTS; ++i) {
+            await rocksDb.get(buffers[i]);
+        }
+        console.log(`RocksDB search: ${(process.hrtime.bigint() - start) / 1024n / BigInt(NUMBER_OF_ELEMENTS)}us / element`);
+        await rocksDb.close();
+        rmdirRecursiveSync(__dirname + '/rocksdb-benchmark.bin');
+    }
+
+    if (global.gc) {
+        global.gc();
+        const usageBefore = process.memoryUsage().heapUsed;
+
+        const rocksDb = level(__dirname + '/rocksdb-benchmark.bin');
+        for (let i = 0; i < NUMBER_OF_ELEMENTS; ++i) {
+            await rocksDb.put(buffers[i], emptyBuffer);
+        }
+        global.gc();
+        await rocksDb.close();
+        // rmdirRecursiveSync(__dirname + '/rocksdb-benchmark.bin');
+
+        // TODO: Figure out why this thing gives negative memory difference, it doesn't make sense
+        console.log(`RocksDB heap usage when idle: ${((process.memoryUsage().heapUsed - usageBefore) / 1024 / 1024).toFixed(2)}MiB`);
+    } else {
+        console.log(`Start with node --expose-gc (which ts-node) ${process.argv[1]} to enable heap usage measuring`);
+    }
 })();
