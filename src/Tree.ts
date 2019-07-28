@@ -34,11 +34,26 @@ export class Tree<K, V> {
     }
 
     /**
+     * Get the node value by target key
+     *
+     * @param targetKey
+     *
+     * @return
+     */
+    public getNodeValue(targetKey: K): V | null {
+        const result = this.getClosestNodeInternal(targetKey);
+        if (result && this.nodeManager.compare(result[0], targetKey) === 0) {
+            return result[1];
+        }
+        return null;
+    }
+
+    /**
      * Get the closest node key/value in a tree to a given target key
      *
      * @param targetKey
      *
-     * @return [key, value] The closest key to the challenge or `null` if no nodes are available and its value
+     * @return The closest key and its value to the challenge or `null` if no nodes are available
      */
     public getClosestNode(targetKey: K): [K, V] | null {
         const result = this.getClosestNodeInternal(targetKey);

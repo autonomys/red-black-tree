@@ -91,6 +91,9 @@ Add a new node to the tree.
 #### redBlackTree.Tree.removeNode(key: K): void
 Remove node from the tree.
 
+#### redBlackTree.Tree.getNodeValue(targetKey: K): V | null
+Get the node value by target key, `null` if key if not found.
+
 #### redBlackTree.Tree.getClosestNode(targetKey: K): [K, V] | null
 Get closest node key/value to `targetKey` (can be exact match or not, please check if needed) or `null` if not found.
 
@@ -101,6 +104,9 @@ The same as in regular `Tree`, but for asynchronous node managers.
 The same as in regular `Tree`, but for asynchronous node managers.
 
 #### redBlackTree.TreeAsync.removeNode(key: K): Promise<void>
+The same as in regular `Tree`, but for asynchronous node managers.
+
+#### redBlackTree.Tree.getNodeValue(targetKey: K): Promise<V | null>
 The same as in regular `Tree`, but for asynchronous node managers.
 
 #### redBlackTree.TreeAsync.getClosestNode(targetKey: K): Promise<[K, V] | null>
