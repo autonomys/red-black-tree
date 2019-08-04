@@ -10,5 +10,5 @@ export interface INodeManagerBase<K, V> {
 
     compare(aKey: K, bKey: K): -1 | 0 | 1;
 
-    distance(aKey: K, bKey: K): bigint;
+    distance(aKey: K, bKey: K): bigint | number;
 }

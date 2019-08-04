@@ -8,7 +8,7 @@ export class NodeManagerJsNumber<V> extends NodeManagerJs<number, V> {
         return aKey < bKey ? -1 : 1;
     }
 
-    public distance(aKey: number, bKey: number): bigint {
-        return BigInt(Math.abs(aKey - bKey));
+    public distance(aKey: number, bKey: number): number {
+        return Math.abs(aKey - bKey);
     }
 }

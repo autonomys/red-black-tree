@@ -21,7 +21,7 @@ export abstract class NodeManagerJs<K, V> implements INodeManager<K, V> {
 
     public abstract compare(aKey: K, bKey: K): -1 | 0 | 1;
 
-    public abstract distance(aKey: K, bKey: K): bigint;
+    public abstract distance(aKey: K, bKey: K): bigint | number;
 
     public removeNode(): void {
         // Nothing is needed to remove a node

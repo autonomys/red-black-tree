@@ -192,7 +192,7 @@ export class TreeAsync<K, V> {
 
     private pickClosestNode(nodes: Array<INodeAsync<K, V>>, targetKey: K): INodeAsync<K, V> {
         const nodeManager = this.nodeManager;
-        const distances = new Map<INodeAsync<K, V>, bigint>();
+        const distances = new Map<INodeAsync<K, V>, bigint | number>();
         for (const node of nodes) {
             distances.set(node, nodeManager.distance(node.getKey(), targetKey));
         }

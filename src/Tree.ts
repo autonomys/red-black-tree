@@ -187,7 +187,7 @@ export class Tree<K, V> {
 
     private pickClosestNode(nodes: Array<INode<K, V>>, targetKey: K): INode<K, V> {
         const nodeManager = this.nodeManager;
-        const distances = new Map<INode<K, V>, bigint>();
+        const distances = new Map<INode<K, V>, bigint | number>();
         for (const node of nodes) {
             distances.set(node, nodeManager.distance(node.getKey(), targetKey));
         }
