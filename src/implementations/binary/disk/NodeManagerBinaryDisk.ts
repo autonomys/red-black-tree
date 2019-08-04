@@ -1,6 +1,6 @@
 import * as fs from "fs";
 import {RuntimeError} from "../../../RuntimeError";
-import {compareUint8Array, maxNumberToBytes} from "../../../utils";
+import {compareUint8Array, maxNumberToBytes, uint8ArraysDiff} from "../../../utils";
 import {NodeManagerAsyncGeneric} from "../../NodeManagerAsyncGeneric";
 import {File} from "./File";
 import {NodeBinaryDisk} from "./NodeBinaryDisk";
@@ -95,6 +95,7 @@ export class NodeManagerBinaryDisk extends NodeManagerAsyncGeneric<Uint8Array, U
     }
 
     public compare = compareUint8Array;
+    public distance = uint8ArraysDiff;
 
     private rootCache: NodeBinaryDisk | null | undefined = undefined;
     // @ts-ignore Set in `NodeManagerBinaryDisk.open()` instead of constructor

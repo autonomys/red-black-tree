@@ -14,6 +14,32 @@ export function compareUint8Array(aKey: Uint8Array, bKey: Uint8Array): -1 | 0 | 
     return 0;
 }
 
+function uint8ArrayToBigInt(arr: Uint8Array): bigint {
+    let result = 0n;
+
+    const length = arr.length;
+    for (let i = length - 1, multiplier = 2n ** (BigInt(i) * 8n); i >= 0n; --i, multiplier /= 256n) {
+        result += BigInt(arr[i]) * multiplier;
+    }
+
+    return result;
+}
+
+/**
+ * If one key is longer than other, extra length is not checked
+ *
+ * @param aKey
+ * @param bKey
+ */
+export function uint8ArraysDiff(aKey: Uint8Array, bKey: Uint8Array): bigint {
+    const aBigInt = uint8ArrayToBigInt(aKey);
+    const bBigInt = uint8ArrayToBigInt(bKey);
+    const diff = aBigInt - bBigInt;
+
+    // Math.abs() doesn't work with BigInt
+    return diff > 0 ? diff : -diff;
+}
+
 export function maxNumberToBytes(maxNumber: number): number {
     if (maxNumber < 2 ** 8) {
         return 1;

@@ -156,8 +156,10 @@ export class Tree<K, V> {
         if (!currentNode) {
             return null;
         }
+        const path: Array<INode<K, V>> = [];
         while (true) {
             const key = currentNode.getKey();
+            path.push(currentNode);
             switch (nodeManager.compare(targetKey, key)) {
                 case -1:
                     const left = currentNode.getLeft();
@@ -165,7 +167,8 @@ export class Tree<K, V> {
                         currentNode = left;
                         break;
                     } else {
-                        return [key, currentNode.getValue()];
+                        const closestNode = this.pickClosestNode(path, targetKey);
+                        return [closestNode.getKey(), closestNode.getValue()];
                     }
                 case 1:
                     const right = currentNode.getRight();
@@ -173,11 +176,29 @@ export class Tree<K, V> {
                         currentNode = right;
                         break;
                     } else {
-                        return [key, currentNode.getValue()];
+                        const closestNode = this.pickClosestNode(path, targetKey);
+                        return [closestNode.getKey(), closestNode.getValue()];
                     }
                 default:
                     return [key, currentNode.getValue()];
             }
         }
+    }
+
+    private pickClosestNode(nodes: Array<INode<K, V>>, targetKey: K): INode<K, V> {
+        const nodeManager = this.nodeManager;
+        const distances = new Map<INode<K, V>, bigint>();
+        for (const node of nodes) {
+            distances.set(node, nodeManager.distance(node.getKey(), targetKey));
+        }
+        return nodes.sort((nodeA, nodeB) => {
+            const distanceA = distances.get(nodeA) as bigint;
+            const distanceB = distances.get(nodeB) as bigint;
+
+            if (distanceA === distanceB) {
+                return 0;
+            }
+            return distanceA < distanceB ? -1 : 1;
+        })[0];
     }
 }
