@@ -1,6 +1,6 @@
 import {INodeManager} from "../../..";
 import {RuntimeError} from "../../../RuntimeError";
-import {compareUint8Array, getNumberFromBytes, maxNumberToBytes, setNumberToBytes} from "../../../utils";
+import {compareUint8Array, getNumberFromBytes, maxNumberToBytes, setNumberToBytes, uint8ArraysDiff} from "../../../utils";
 import {NodeBinaryMemory} from "./NodeBinaryMemory";
 
 /**
@@ -45,6 +45,7 @@ export class NodeManagerBinaryMemory implements INodeManager<Uint8Array, Uint8Ar
     }
 
     public compare = compareUint8Array;
+    public distance = uint8ArraysDiff;
 
     private rootCache: NodeBinaryMemory | null | undefined = undefined;
     private freeNodeOffset: number;

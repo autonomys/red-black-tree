@@ -34,8 +34,6 @@ export interface INodeManagerAsync<K, V> extends INodeManagerBase<K, V> {
 
     removeNodeAsync(node: INodeAsync<K, V>): Promise<void>;
 
-    compare(aKey: K, bKey: K): -1 | 0 | 1;
-
     /**
      * Clean temporary caches that may be needed for node manager to work properly and/or efficiently
      */

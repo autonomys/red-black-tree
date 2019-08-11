@@ -159,8 +159,10 @@ export class TreeAsync<K, V> {
         if (!currentNode) {
             return null;
         }
+        const path: Array<INodeAsync<K, V>> = [];
         while (true) {
             const key = currentNode.getKey();
+            path.push(currentNode);
             switch (nodeManager.compare(targetKey, key)) {
                 case -1:
                     // TypeScript fails to infer type, so have to specify it explicitly
@@ -169,7 +171,8 @@ export class TreeAsync<K, V> {
                         currentNode = left;
                         break;
                     } else {
-                        return [key, await currentNode.getValueAsync()];
+                        const closestNode = this.pickClosestNode(path, targetKey);
+                        return [closestNode.getKey(), await closestNode.getValueAsync()];
                     }
                 case 1:
                     // TypeScript fails to infer type, so have to specify it explicitly
@@ -178,11 +181,29 @@ export class TreeAsync<K, V> {
                         currentNode = right;
                         break;
                     } else {
-                        return [key, await currentNode.getValueAsync()];
+                        const closestNode = this.pickClosestNode(path, targetKey);
+                        return [closestNode.getKey(), await closestNode.getValueAsync()];
                     }
                 default:
                     return [key, await currentNode.getValueAsync()];
             }
         }
+    }
+
+    private pickClosestNode(nodes: Array<INodeAsync<K, V>>, targetKey: K): INodeAsync<K, V> {
+        const nodeManager = this.nodeManager;
+        const distances = new Map<INodeAsync<K, V>, bigint | number>();
+        for (const node of nodes) {
+            distances.set(node, nodeManager.distance(node.getKey(), targetKey));
+        }
+        return nodes.sort((nodeA, nodeB) => {
+            const distanceA = distances.get(nodeA) as bigint;
+            const distanceB = distances.get(nodeB) as bigint;
+
+            if (distanceA === distanceB) {
+                return 0;
+            }
+            return distanceA < distanceB ? -1 : 1;
+        })[0];
     }
 }
