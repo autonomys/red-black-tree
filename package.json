@@ -8,7 +8,7 @@
     "search tree",
     "self-balancing"
   ],
-  "version": "0.1.2",
+  "version": "0.1.3",
   "homepage": "https://github.com/subspace/red-black-tree",
   "author": "Nazar Mokrynskyi <nazar@mokrynskyi.com>",
   "repository": {
